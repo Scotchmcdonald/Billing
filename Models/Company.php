@@ -8,6 +8,8 @@ use Modules\Billing\Models\BillingAuthorization;
 use Modules\Billing\Models\PriceOverride;
 use Modules\Billing\Models\Subscription;
 use Modules\Billing\Models\Invoice;
+use Modules\Billing\Models\Retainer;
+use Modules\Billing\Models\CreditNote;
 use App\Models\Customer;
 use App\Models\User;
 

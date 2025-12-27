@@ -57,8 +57,8 @@ class BillableEntry extends Model
             return null;
         }
         
-        // Assuming receipts are stored in storage/app/receipts
-        // You may need to adjust this based on your actual storage configuration
-        return asset('storage/receipts/' . $this->receipt_path);
+        // Use Laravel's Storage facade for secure path handling
+        // This assumes receipts are stored in the configured disk
+        return \Illuminate\Support\Facades\Storage::url('receipts/' . basename($this->receipt_path));
     }
 }
