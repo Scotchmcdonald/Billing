@@ -49,7 +49,7 @@ class Quote extends Model
      */
     public function getDaysToViewAttribute(): ?int
     {
-        if (!$this->is_viewed) {
+        if (!$this->is_viewed || !$this->created_at) {
             return null;
         }
         
