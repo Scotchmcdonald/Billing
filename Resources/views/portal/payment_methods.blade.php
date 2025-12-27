@@ -2,7 +2,21 @@
 
 @section('content')
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-6">Manage Payment Methods - {{ $company->name }}</h1>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Manage Payment Methods - {{ $company->name }}</h1>
+        @if(auth()->user()->isAdmin() || auth()->user()->can('finance.admin'))
+            <div class="flex items-center">
+                <span class="text-sm text-gray-500 mr-2">Viewing as Customer</span>
+                <a href="{{ route('billing.finance.portal-access') }}" class="text-sm text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded-md border border-indigo-200">
+                    {{ __('Switch Company') }}
+                </a>
+            </div>
+        @elseif(isset($hasMultipleCompanies) && $hasMultipleCompanies)
+            <a href="{{ route('billing.portal.entry') }}" class="text-sm text-indigo-600 hover:text-indigo-900">
+                {{ __('Switch Company') }}
+            </a>
+        @endif
+    </div>
 
     @if($highValueTransaction)
     <div class="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6">

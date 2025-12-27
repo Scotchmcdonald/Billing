@@ -22,7 +22,7 @@ class BillingAuthorizationService
     public function canViewBilling(User $user, Company $company): bool
     {
         // Check if user is a global admin or finance admin (internal staff)
-        if ($user->can('finance.admin')) {
+        if ($user->isAdmin() || $user->can('finance.admin')) {
             return true;
         }
 
@@ -41,7 +41,7 @@ class BillingAuthorizationService
      */
     public function canManageBilling(User $user, Company $company): bool
     {
-        if ($user->can('finance.admin')) {
+        if ($user->isAdmin() || $user->can('finance.admin')) {
             return true;
         }
 
@@ -59,7 +59,7 @@ class BillingAuthorizationService
      */
     public function getAuthorizedCompanies(User $user): Collection
     {
-        if ($user->can('finance.admin')) {
+        if ($user->isAdmin() || $user->can('finance.admin')) {
             return Company::all();
         }
 
@@ -91,7 +91,7 @@ class BillingAuthorizationService
      */
     public function scopeForUser($query, User $user)
     {
-        if ($user->can('finance.admin')) {
+        if ($user->isAdmin() || $user->can('finance.admin')) {
             return $query;
         }
 

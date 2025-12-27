@@ -4,6 +4,8 @@ namespace Modules\Billing\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Gate;
+use Laravel\Cashier\Cashier;
 
 class BillingServiceProvider extends ServiceProvider
 {
@@ -12,15 +14,35 @@ class BillingServiceProvider extends ServiceProvider
 
     public function boot()
     {
+        Cashier::useSubscriptionModel(\Modules\Billing\Models\Subscription::class);
+        Cashier::useSubscriptionItemModel(\Modules\Billing\Models\SubscriptionItem::class);
+
         $this->registerRoutes();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'Database/Migrations'));
 
+        Gate::define('finance.admin', function ($user) {
+            return $user->isAdmin();
+        });
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 \Modules\Billing\Console\SyncCrmCompaniesCommand::class,
+                \Modules\Billing\Console\GenerateMonthlyInvoices::class,
             ]);
         }
+
+        $this->app->booted(function () {
+            $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
+            $schedule->command('billing:generate-invoices')->monthlyOn(1, '00:00');
+        });
+
+        \Modules\Billing\Models\Subscription::observe(\Modules\Billing\Observers\SubscriptionObserver::class);
+
+        \Illuminate\Support\Facades\Event::listen(
+            \Modules\Billing\Events\QuoteApproved::class,
+            \Modules\Billing\Listeners\ProvisionQuote::class
+        );
     }
 
     public function register()
@@ -36,6 +58,14 @@ class BillingServiceProvider extends ServiceProvider
             'prefix' => 'billing',
         ], function ($router) {
             require module_path($this->moduleName, 'Routes/web.php');
+        });
+
+        Route::group([
+            'middleware' => 'api',
+            'namespace' => 'Modules\Billing\Http\Controllers',
+            'prefix' => 'api/v1/finance',
+        ], function ($router) {
+            require module_path($this->moduleName, 'Routes/api.php');
         });
     }
 

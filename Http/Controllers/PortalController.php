@@ -23,6 +23,12 @@ class PortalController extends Controller
     public function entry()
     {
         $user = Auth::user();
+        
+        // If admin, redirect to portal access page
+        if ($user->isAdmin() || $user->can('finance.admin')) {
+            return redirect()->route('billing.finance.portal-access');
+        }
+
         $companies = $this->authService->getAuthorizedCompanies($user);
 
         if ($companies->isEmpty()) {
@@ -34,21 +40,55 @@ class PortalController extends Controller
             return redirect()->route('billing.portal.dashboard', ['company' => $companies->first()->id]);
         }
 
-        // Otherwise show selector (TODO: Build selector view)
-        // For now, just redirect to first
-        return redirect()->route('billing.portal.dashboard', ['company' => $companies->first()->id]);
+        // Otherwise show selector
+        return view('billing::portal.company_selector', ['companies' => $companies]);
     }
 
     public function dashboard(Company $company)
     {
         // Ensure Stripe Customer exists
-        if (!$company->stripe_id) {
-            $company->createAsStripeCustomer();
+        try {
+            if (! $company->stripe_id) {
+                $company->createAsStripeCustomer();
+            }
+        } catch (\Exception $e) {
+            report($e);
+        }
+
+        $user = Auth::user();
+        $companies = $this->authService->getAuthorizedCompanies($user);
+        $hasMultipleCompanies = $companies->count() > 1;
+
+        $invoices = [];
+        $payments = [];
+        $paymentMethods = collect();
+
+        try {
+            // Fetch local invoices
+            $invoices = $company->invoices()->orderBy('issue_date', 'desc')->get();
+        } catch (\Exception $e) {
+            report($e);
+        }
+
+        try {
+            $payments = $company->payments()->orderBy('payment_date', 'desc')->get();
+        } catch (\Exception $e) {
+            report($e);
+        }
+
+        try {
+            $paymentMethods = $company->paymentMethods();
+        } catch (\Exception $e) {
+            report($e);
         }
 
         return view('billing::portal.dashboard', [
             'company' => $company,
-            'invoices' => $this->paymentService->getInvoices($company),
+            'invoices' => $invoices,
+            'payments' => $payments,
+            'subscriptions' => $company->subscriptions,
+            'paymentMethods' => $paymentMethods,
+            'hasMultipleCompanies' => $hasMultipleCompanies,
         ]);
     }
 
@@ -81,10 +121,15 @@ class PortalController extends Controller
 
         $intent = $this->paymentService->createSetupIntent($company);
 
+        $user = Auth::user();
+        $companies = $this->authService->getAuthorizedCompanies($user);
+        $hasMultipleCompanies = $companies->count() > 1;
+
         return view('billing::portal.payment_methods', [
             'company' => $company,
             'intent' => $intent,
             'highValueTransaction' => $highValueTransaction,
+            'hasMultipleCompanies' => $hasMultipleCompanies,
         ]);
     }
 

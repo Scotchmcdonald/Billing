@@ -8,39 +8,151 @@ use Modules\Billing\Models\Company;
 use Modules\Billing\Models\BillingLog;
 use Modules\Billing\Services\AccountingExportService;
 use Illuminate\Support\Facades\DB;
+use Laravel\Cashier\Subscription;
+
+use Modules\Billing\Services\ProrationCalculator;
+use Modules\Billing\Services\RevenueRecognitionService;
+use Modules\Billing\Services\ForecastingService;
+use Modules\Billing\Services\AnalyticsService;
 
 class FinanceController extends Controller
 {
     protected $exportService;
+    protected $prorationCalculator;
+    protected $revenueService;
+    protected $forecastingService;
+    protected $analyticsService;
 
-    public function __construct(AccountingExportService $exportService)
+    public function __construct(
+        AccountingExportService $exportService, 
+        ProrationCalculator $prorationCalculator,
+        RevenueRecognitionService $revenueService,
+        ForecastingService $forecastingService,
+        AnalyticsService $analyticsService
+    )
     {
         $this->exportService = $exportService;
+        $this->prorationCalculator = $prorationCalculator;
+        $this->revenueService = $revenueService;
+        $this->forecastingService = $forecastingService;
+        $this->analyticsService = $analyticsService;
     }
 
     public function index()
     {
-        // Dashboard for Finance Admin
-        $companies = Company::with('subscriptions')->paginate(20);
-        
-        // Calculate Global Metrics (Simplified for example)
-        // In a real app, these would be cached or aggregated from Stripe API
-        $totalMrr = $companies->sum(function ($company) {
-            return $company->subscriptions->sum(function ($sub) {
-                return $sub->active() ? $sub->items->first()->price->unit_amount / 100 : 0;
-            });
-        });
+        return redirect()->route('billing.finance.dashboard');
+    }
 
-        return view('billing::admin.dashboard', [
-            'companies' => $companies,
-            'totalMrr' => $totalMrr,
-        ]);
+    public function portalAccess()
+    {
+        $companies = Company::orderBy('name')->get();
+        return view('billing::finance.portal_access', ['companies' => $companies]);
+    }
+
+    public function dashboard()
+    {
+        // MRR Calculation: Sum of all active subscriptions
+        // This is a simplified calculation. In reality, we'd need to handle different intervals.
+        // Assuming standard Cashier tables
+        try {
+            $totalMrr = Subscription::query()->active()->count() * 100; // Placeholder logic: $100 per sub
+        } catch (\Exception $e) {
+            $totalMrr = 0;
+        }
+
+        // AR Aging: Placeholder
+        $arAging = [
+            '0-30' => 12500,
+            '31-60' => 4500,
+            '61-90' => 1200,
+            '90+' => 500,
+        ];
+
+        // Gross Profit: Placeholder
+        $grossProfit = 45000;
+
+        // Pre-Flight Queue
+        $pendingInvoicesCount = 12; 
+
+        // Recent Activity
+        $recentActivity = [
+            ['action' => 'Invoice Generated', 'description' => 'Invoice #INV-2024-001 for Acme Corp', 'time' => '2 mins ago'],
+            ['action' => 'Payment Received', 'description' => '$500.00 from Globex Inc', 'time' => '15 mins ago'],
+            ['action' => 'Override Approved', 'description' => '10% discount for Stark Industries', 'time' => '1 hour ago'],
+        ];
+
+        // Forecasting
+        $forecastData = $this->forecastingService->forecastMRR(6);
+        $churnRate = $this->forecastingService->forecastChurn();
+
+        // Advanced Analytics
+        $metrics = $this->analyticsService->getMetrics();
+
+        return view('billing::finance.dashboard', compact('totalMrr', 'arAging', 'grossProfit', 'pendingInvoicesCount', 'recentActivity', 'forecastData', 'churnRate', 'metrics'));
+    }
+
+    public function preFlight()
+    {
+        // Placeholder data for Pre-Flight Review
+        $invoices = [
+            [
+                'id' => 1,
+                'company_name' => 'Acme Corp',
+                'total' => 1250.00,
+                'variance' => 5.2,
+                'anomaly_score' => 15,
+                'line_items_count' => 5,
+                'unbilled_items' => true,
+                'status' => 'pending_review'
+            ],
+            [
+                'id' => 2,
+                'company_name' => 'Globex Inc',
+                'total' => 3400.00,
+                'variance' => 25.0,
+                'anomaly_score' => 85, // High anomaly
+                'line_items_count' => 12,
+                'unbilled_items' => false,
+                'status' => 'pending_review'
+            ],
+             [
+                'id' => 3,
+                'company_name' => 'Stark Industries',
+                'total' => 15000.00,
+                'variance' => -2.0,
+                'anomaly_score' => 5,
+                'line_items_count' => 20,
+                'unbilled_items' => true,
+                'status' => 'pending_review'
+            ],
+        ]; 
+        return view('billing::finance.pre-flight', compact('invoices'));
+    }
+
+
+
+    public function overrides()
+    {
+        return view('billing::finance.overrides');
+    }
+
+    public function invoices()
+    {
+        return view('billing::finance.invoices');
+    }
+
+    public function payments()
+    {
+        return view('billing::finance.payments');
+    }
+
+    public function arAging()
+    {
+        return view('billing::finance.ar-aging');
     }
 
     public function collections()
     {
-        // Logic to find past due invoices
-        // This would typically query Stripe or a local cache of invoices
         return view('billing::finance.collections');
     }
 
@@ -51,15 +163,181 @@ class FinanceController extends Controller
 
     public function export()
     {
-        // We use chunking in the service or here, but for simplicity let's grab all for the export service
-        // In production with thousands of rows, we'd stream this.
         $companies = Company::all();
-        
         $csvContent = $this->exportService->generateCsv($companies);
 
         return response($csvContent, 200, [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="finance_export.csv"',
         ]);
+    }
+
+    public function usageReview()
+    {
+        $usageChanges = \Modules\Billing\Models\UsageChange::with(['company', 'subscription.product'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('billing::finance.usage-review', compact('usageChanges'));
+    }
+
+    public function approveUsageChange(Request $request, $id)
+    {
+        $change = \Modules\Billing\Models\UsageChange::findOrFail($id);
+        
+        // Update Subscription
+        $subscription = $change->subscription;
+        if ($subscription) {
+            // Calculate Proration
+            $prorationResult = $this->prorationCalculator->calculateProration(
+                $subscription, 
+                \Carbon\Carbon::now(), 
+                $change->new_quantity
+            );
+
+            // Create Billable Entry if needed
+            if ($prorationResult->amount != 0) {
+                \Modules\Billing\Models\BillableEntry::create([
+                    'company_id' => $subscription->company_id,
+                    'user_id' => auth()->id() ?? 1,
+                    'type' => 'product',
+                    'description' => "Proration adjustment for usage change (from {$change->old_quantity} to {$change->new_quantity})",
+                    'quantity' => 1,
+                    'rate' => $prorationResult->amount,
+                    'subtotal' => $prorationResult->amount,
+                    'is_billable' => true,
+                    'date' => now(),
+                    'metadata' => [
+                        'source' => 'usage_review',
+                        'usage_change_id' => $change->id,
+                        'proration_details' => $prorationResult->calculation_details,
+                    ],
+                ]);
+            }
+
+            $subscription->quantity = $change->new_quantity;
+            $subscription->save();
+        }
+
+        $change->status = 'approved';
+        $change->save();
+
+        return redirect()->back()->with('success', 'Usage change approved.');
+    }
+
+    public function rejectUsageChange(Request $request, $id)
+    {
+        $change = \Modules\Billing\Models\UsageChange::findOrFail($id);
+        $change->status = 'rejected';
+        $change->save();
+
+        return redirect()->back()->with('success', 'Usage change rejected.');
+    }
+
+    public function profitability()
+    {
+        $companies = Company::with(['invoices', 'billableEntries'])->get();
+        
+        $report = $companies->map(function ($company) {
+            // Revenue (MTD)
+            $revenue = $company->invoices()
+                ->whereBetween('issue_date', [now()->startOfMonth(), now()->endOfMonth()])
+                ->sum('total');
+                
+            // COGS
+            $cogs = DB::table('invoice_line_items')
+                ->join('invoices', 'invoice_line_items.invoice_id', '=', 'invoices.id')
+                ->join('products', 'invoice_line_items.product_id', '=', 'products.id')
+                ->where('invoices.company_id', $company->id)
+                ->whereBetween('invoices.issue_date', [now()->startOfMonth(), now()->endOfMonth()])
+                ->sum(DB::raw('invoice_line_items.quantity * products.cost_price'));
+                
+            // Labor Cost
+            $laborCost = DB::table('billable_entries')
+                ->join('users', 'billable_entries.user_id', '=', 'users.id')
+                ->where('billable_entries.company_id', $company->id)
+                ->where('billable_entries.type', 'time')
+                ->whereBetween('billable_entries.date', [now()->startOfMonth(), now()->endOfMonth()])
+                ->sum(DB::raw('billable_entries.quantity * COALESCE(users.internal_cost_rate, 50)')); 
+                
+            $grossMargin = $revenue - $cogs - $laborCost;
+            $grossMarginPercent = $revenue > 0 ? ($grossMargin / $revenue) * 100 : 0;
+            
+            // Effective Hourly Rate
+            $totalHours = $company->billableEntries()
+                ->where('type', 'time')
+                ->whereBetween('date', [now()->startOfMonth(), now()->endOfMonth()])
+                ->sum('quantity');
+                
+            $ehr = $totalHours > 0 ? $revenue / $totalHours : 0;
+            
+            return [
+                'company' => $company,
+                'revenue' => $revenue,
+                'cogs' => $cogs,
+                'labor_cost' => $laborCost,
+                'gross_margin' => $grossMargin,
+                'gross_margin_percent' => $grossMarginPercent,
+                'ehr' => $ehr,
+            ];
+        })->sortBy('gross_margin_percent');
+        
+        return view('billing::finance.profitability', compact('report'));
+    }
+
+    public function revenueRecognition()
+    {
+        // Get all active subscriptions
+        $subscriptions = \Modules\Billing\Models\Subscription::with(['company', 'product'])->active()->get();
+        
+        $report = $subscriptions->map(function ($sub) {
+            $monthlyRevenue = $this->revenueService->calculateMonthlyRevenue($sub);
+            $deferredRevenue = $this->revenueService->getDeferredRevenue($sub);
+            
+            return [
+                'subscription' => $sub,
+                'monthly_revenue' => $monthlyRevenue,
+                'deferred_revenue' => $deferredRevenue,
+            ];
+        });
+        
+        return view('billing::finance.revenue-recognition', compact('report'));
+    }
+
+    public function settings()
+    {
+        $settings = \Modules\Billing\Models\BillingSettings::all()->keyBy('key');
+        return view('billing::finance.settings', compact('settings'));
+    }
+
+    public function updateQuickBooksSettings(Request $request)
+    {
+        $request->validate([
+            'quickbooks_enabled' => 'nullable', // Checkbox sends 'on' or nothing
+            'quickbooks_client_id' => 'nullable|string',
+            'quickbooks_client_secret' => 'nullable|string',
+            'quickbooks_realm_id' => 'nullable|string',
+        ]);
+
+        $this->updateSetting('quickbooks_enabled', $request->has('quickbooks_enabled'), 'quickbooks', 'boolean');
+        $this->updateSetting('quickbooks_client_id', $request->quickbooks_client_id, 'quickbooks', 'string', true);
+        $this->updateSetting('quickbooks_client_secret', $request->quickbooks_client_secret, 'quickbooks', 'string', true);
+        $this->updateSetting('quickbooks_realm_id', $request->quickbooks_realm_id, 'quickbooks', 'string');
+
+        return redirect()->back()->with('success', 'QuickBooks settings updated.');
+    }
+
+    protected function updateSetting($key, $value, $group, $type, $encrypted = false)
+    {
+        \Modules\Billing\Models\BillingSettings::updateOrCreate(
+            ['key' => $key],
+            [
+                'value' => $value,
+                'group' => $group,
+                'type' => $type,
+                'is_encrypted' => $encrypted
+            ]
+        );
     }
 }

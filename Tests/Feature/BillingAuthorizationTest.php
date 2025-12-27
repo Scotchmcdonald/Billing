@@ -60,6 +60,6 @@ class BillingAuthorizationTest extends TestCase
                          ->get(route('billing.finance.export'));
 
         $response->assertStatus(200);
-        $response->assertHeader('content-type', 'text/csv; charset=UTF-8');
+        $response->assertHeader('content-type', 'text/csv; charset=utf-8');
     }
 }

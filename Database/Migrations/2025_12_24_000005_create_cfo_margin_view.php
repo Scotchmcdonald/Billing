@@ -7,8 +7,9 @@ return new class extends Migration
 {
     public function up()
     {
+        DB::statement("DROP VIEW IF EXISTS cfo_margin_reports");
         DB::statement("
-            CREATE OR REPLACE VIEW cfo_margin_reports AS
+            CREATE VIEW cfo_margin_reports AS
             SELECT
                 ili.invoice_id,
                 ili.product_id,
