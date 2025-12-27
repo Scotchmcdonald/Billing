@@ -7,6 +7,54 @@
 
 ---
 
+## 🚧 PROGRESS NOTES (Dec 27, 2025)
+
+### ✅ COMPLETED
+1. **Migrations Created & Run** (All 10 migrations successful)
+   - ✅ `add_dispute_fields_to_invoices_table` - Added is_disputed, dunning_paused, internal_notes, approved_at, approved_by
+   - ✅ `add_contract_fields_to_subscriptions_table` - Added contract dates, document path, renewal_status
+   - ✅ `create_credit_notes_table` - New table with invoice/company relationships
+   - ✅ `create_retainers_table` - New table for hour-based retainers
+   - ✅ `create_product_bundles_table` - New table for bundled products
+   - ✅ `create_billing_audit_logs_table` - Comprehensive audit trail table
+   - ✅ `add_tracking_fields_to_quotes_table` - Added viewed_at, accepted_at, signature fields
+   - ✅ `add_invoice_link_to_billable_entries` - Added receipt_path (invoice_line_item_id already existed)
+   - ✅ `create_notification_preferences_table` - User notification settings
+   - ✅ `add_performance_indexes_to_billing_tables` - Compound indexes for queries
+
+**Commit:** `50968a8` - All migrations committed to git
+
+### 🔄 NEXT STEPS
+2. **Create/Update Eloquent Models** (Not yet started)
+   - [ ] Create `CreditNote` model (`Modules/Billing/Models/CreditNote.php`)
+   - [ ] Create `Retainer` model (`Modules/Billing/Models/Retainer.php`)
+   - [ ] Create `ProductBundle` model (`Modules/Billing/Models/ProductBundle.php`)
+   - [ ] Create `BillingAuditLog` model (`Modules/Billing/Models/BillingAuditLog.php`)
+   - [ ] Create `NotificationPreference` model (`Modules/Billing/Models/NotificationPreference.php`)
+   - [ ] Update `Invoice` model - Add new fillable fields and casts
+   - [ ] Update `Subscription` model - Add new fillable fields and casts
+   - [ ] Update `Quote` model - Add new fillable fields and casts
+   - [ ] Update `BillableEntry` model - Add receipt_path to fillable
+
+3. **Add Relationships to Models**
+   - [ ] Invoice: approvedBy(), disputes(), creditNotes()
+   - [ ] Company: retainers(), creditNotes()
+   - [ ] BillableEntry: invoiceLineItem(), receipt accessor
+   - [ ] Quote: tracking accessors (isViewed, isAccepted, daysToView)
+
+4. **Create Model Factories** (Optional but recommended)
+   - [ ] `CreditNoteFactory`
+   - [ ] `RetainerFactory`
+   - [ ] `ProductBundleFactory`
+   - [ ] `BillingAuditLogFactory`
+
+5. **Testing & Verification**
+   - [ ] Run verification commands from work packet
+   - [ ] Test model relationships
+   - [ ] Verify all migrations can rollback cleanly
+
+---
+
 ## Agent Prompt
 
 ```
