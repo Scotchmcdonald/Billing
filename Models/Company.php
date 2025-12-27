@@ -10,6 +10,7 @@ use Modules\Billing\Models\Subscription;
 use Modules\Billing\Models\Invoice;
 use Modules\Billing\Models\Retainer;
 use Modules\Billing\Models\CreditNote;
+use Modules\Billing\Models\BillableEntry;
 use App\Models\Customer;
 use App\Models\User;
 
