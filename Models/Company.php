@@ -77,6 +77,16 @@ class Company extends Model
         return $this->hasMany(\Modules\Billing\Models\Payment::class);
     }
 
+    public function retainers()
+    {
+        return $this->hasMany(Retainer::class);
+    }
+
+    public function creditNotes()
+    {
+        return $this->hasMany(CreditNote::class);
+    }
+
     /**
      * Get the Stripe supported payment method types.
      *

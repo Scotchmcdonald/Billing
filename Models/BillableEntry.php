@@ -47,4 +47,18 @@ class BillableEntry extends Model
     {
         return $query->whereNull('invoice_line_item_id')->where('is_billable', true);
     }
+
+    /**
+     * Get the receipt URL if available.
+     */
+    public function getReceiptAttribute(): ?string
+    {
+        if (!$this->receipt_path) {
+            return null;
+        }
+        
+        // Assuming receipts are stored in storage/app/receipts
+        // You may need to adjust this based on your actual storage configuration
+        return asset('storage/receipts/' . $this->receipt_path);
+    }
 }

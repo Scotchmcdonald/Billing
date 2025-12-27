@@ -15,6 +15,9 @@ class Invoice extends Model
         'subtotal' => 'decimal:4',
         'tax_total' => 'decimal:4',
         'total' => 'decimal:4',
+        'is_disputed' => 'boolean',
+        'dunning_paused' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     public function company()
@@ -30,5 +33,15 @@ class Invoice extends Model
     public function payments()
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'approved_by');
+    }
+
+    public function creditNotes()
+    {
+        return $this->hasMany(CreditNote::class);
     }
 }
