@@ -2,15 +2,49 @@
     <div class="container mx-auto px-4 py-6">
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold text-gray-900">Credit Notes</h1>
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Credit Notes</h1>
+                <p class="mt-1 text-sm text-gray-600">Manage invoice credits and refunds</p>
+            </div>
         </div>
+
+        <!-- Success/Error Messages -->
+        @if(session('success'))
+            <div class="mb-6 bg-success-50 border-l-4 border-success-400 p-4 rounded">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-success-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-success-700">{{ session('success') }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="mb-6 bg-danger-50 border-l-4 border-danger-400 p-4 rounded">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-danger-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-danger-700">{{ $errors->first() }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <!-- Filters -->
         <form method="GET" action="{{ route('billing.finance.credit-notes.index') }}" class="bg-white shadow-sm rounded-lg p-6 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <label for="company_id" class="block text-sm font-medium text-gray-700">Company</label>
-                    <select id="company_id" name="company_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <select id="company_id" name="company_id" class="mt-1 block w-full py-3 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
                         <option value="">All Companies</option>
                         @foreach($companies as $company)
                             <option value="{{ $company->id }}" {{ request('company_id') == $company->id ? 'selected' : '' }}>
@@ -22,7 +56,7 @@
 
                 <div>
                     <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
-                    <select id="status" name="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <select id="status" name="status" class="mt-1 block w-full py-3 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
                         <option value="">All</option>
                         <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                         <option value="applied" {{ request('status') == 'applied' ? 'selected' : '' }}>Applied</option>
@@ -31,20 +65,20 @@
 
                 <div>
                     <label for="start_date" class="block text-sm font-medium text-gray-700">Start Date</label>
-                    <input type="date" id="start_date" name="start_date" value="{{ request('start_date') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <input type="date" id="start_date" name="start_date" value="{{ request('start_date') }}" class="mt-1 block w-full py-3 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
                 </div>
 
                 <div>
                     <label for="end_date" class="block text-sm font-medium text-gray-700">End Date</label>
-                    <input type="date" id="end_date" name="end_date" value="{{ request('end_date') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <input type="date" id="end_date" name="end_date" value="{{ request('end_date') }}" class="mt-1 block w-full py-3 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500">
                 </div>
             </div>
 
             <div class="mt-4 flex justify-end space-x-3">
-                <a href="{{ route('billing.finance.credit-notes.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <a href="{{ route('billing.finance.credit-notes.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                     Clear
                 </a>
-                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700">
+                <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                     Filter
                 </button>
             </div>
@@ -74,7 +108,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 @if($creditNote->invoice)
-                                    <a href="{{ route('billing.finance.invoices.show', $creditNote->invoice) }}" class="text-indigo-600 hover:text-indigo-900">
+                                    <a href="{{ route('billing.finance.invoices.show', $creditNote->invoice) }}" class="text-primary-600 hover:text-primary-900 focus:outline-none focus:underline">
                                         {{ $creditNote->invoice->invoice_number }}
                                     </a>
                                 @else
@@ -98,11 +132,11 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($creditNote->applied_at)
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 text-emerald-800">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-success-100 text-success-800">
                                         Applied
                                     </span>
                                 @else
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-warning-100 text-warning-800">
                                         Pending
                                     </span>
                                 @endif
@@ -111,12 +145,12 @@
                                 @if(!$creditNote->applied_at)
                                     <form method="POST" action="{{ route('billing.finance.credit-notes.apply', $creditNote) }}" class="inline">
                                         @csrf
-                                        <button type="submit" class="text-indigo-600 hover:text-indigo-900">Apply</button>
+                                        <button type="submit" class="text-primary-600 hover:text-primary-900 focus:outline-none focus:underline">Apply</button>
                                     </form>
                                     <form method="POST" action="{{ route('billing.finance.credit-notes.void', $creditNote) }}" class="inline ml-3" onsubmit="return confirm('Are you sure you want to void this credit note?')">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-rose-600 hover:text-rose-900">Void</button>
+                                        <button type="submit" class="text-danger-600 hover:text-danger-900 focus:outline-none focus:underline">Void</button>
                                     </form>
                                 @endif
                             </td>
