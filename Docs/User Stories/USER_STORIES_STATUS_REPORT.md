@@ -377,93 +377,303 @@
 ### Phase 11: Executive Dashboard & KPI Enhancements
 **Priority:** HIGH  
 **Estimated Effort:** 16-24 hours  
-**User Stories:** 3 executive stories  
+**UX Pattern:** Control Tower Dashboard  
+**User Stories:** 6 executive stories  
 
 **Features:**
-1. Dedicated Executive Dashboard with 5 key KPIs only
-2. Historical trend analysis (MoM, YoY comparisons)
-3. Alert configuration UI for threshold-based notifications
-4. Expose Effective Hourly Rate in executive views
+1. **Dedicated Executive Dashboard** with 5 key KPIs (MRR, Churn, Gross Margin, LTV, AR Aging)
+   - Large, prominent KPI cards with sparkline trends
+   - Real-time updates every 30 seconds
+   - Mobile-responsive grid layout
+2. **Historical Trend Analysis** (MoM, YoY comparisons)
+   - Inline sparkline charts for each KPI
+   - Color-coded trend arrows
+   - 12-month rolling average
+3. **Alert Configuration UI** for threshold-based notifications
+   - Multi-step wizard for alert setup
+   - Multiple notification channels (email, in-app, Slack)
+   - Configurable thresholds per metric
+4. **Effective Hourly Rate Display** vs. target
+   - Current vs. Target comparison
+   - Trend sparkline (6 months)
+   - Status badge (on-target/below-target)
+5. **Weekly Email Digest** of key financial metrics
+   - Scheduled job with responsive HTML template
+   - Week-over-week KPI changes
+   - Top 3 at-risk clients
+6. **Industry Benchmark Comparison**
+   - Gauge charts showing position within range
+   - Percentile ranking
+   - API integrations (HTG, Service Leadership)
 
-**Dependencies:** None (builds on existing services)
+**Implementation Checklist:**
+- Backend: ExecutiveDashboardController, TrendAnalyticsService, BenchmarkingService, SendExecutiveDigestJob
+- Frontend: 6 new Blade components (x-kpi-card, x-trend-indicator, etc.)
+- Testing: Unit tests, feature tests, accessibility audit, load testing
+- Documentation: User guide, alert configuration workflow, API integration requirements
+
+**Dependencies:** Existing AnalyticsService, ForecastingService, AlertService
+
+**Success Metrics:** 80%+ weekly dashboard usage, <10s time-to-insight, 90%+ alert effectiveness
 
 ---
 
-### Phase 12: Bulk Operations & Advanced Finance Admin Tools
+### Phase 12: Bulk Operations & Finance Admin Tools
 **Priority:** MEDIUM  
 **Estimated Effort:** 20-28 hours  
-**User Stories:** 7 finance admin stories  
+**UX Pattern:** Guided Journey + Control Tower  
+**User Stories:** 6 finance admin stories  
 
 **Features:**
-1. Bulk invoice note editing
-2. Wire Pre-Flight Excel export to existing ExportService
-3. Add Effective Hourly Rate to Profitability Dashboard
-4. Enhanced audit log filtering in UI
+1. **Bulk Price Override Manager**
+   - 3-step wizard (Selection → Configuration → Preview)
+   - Dry-run preview before commit
+   - Rollback capability within 24 hours
+   - Typed confirmation required ("APPLY CHANGES")
+2. **Pre-Flight Excel Export**
+   - Immediate download (< 5s for 100 invoices)
+   - Multiple sheets (invoices, summary, anomalies)
+   - Styled headers and frozen panes
+3. **Effective Hourly Rate in Profitability Dashboard**
+   - New sortable column in client table
+   - Color-coded cells (green/red vs. target)
+   - Cached hourly refresh for performance
+4. **Enhanced Audit Log Viewer**
+   - Vertical timeline with event icons
+   - Expandable details for email content
+   - Pagination on scroll (50 events at a time)
+5. **Invoice Internal Notes**
+   - JSON field for note storage
+   - Markdown support
+   - @ mentions for notifications
+   - Visible only to finance.admin permission
+6. **Dunning Pause Control**
+   - Toggle switch with reason dropdown
+   - Visual indicator on invoice list
+   - Audit log of pause/resume actions
 
-**Dependencies:** Phase 9 (ExportService)
+**Implementation Checklist:**
+- Backend: BulkOverrideService, enhance ExportService, add invoice columns (internal_notes, dunning_paused_at)
+- Frontend: Bulk wizard, x-timeline component, notes section, dunning pause control
+- Testing: Bulk update accuracy, Excel export with large datasets, audit log filtering
+- Documentation: Bulk workflow guide, dunning pause troubleshooting
+
+**Dependencies:** Phase 9 (ExportService), existing PricingEngineService
+
+**Success Metrics:** 90% efficiency gain in global price changes, 60%+ Pre-Flight export adoption, 50% fewer disputes
 
 ---
 
 ### Phase 13: Accountant Role & Reconciliation Tools
 **Priority:** MEDIUM  
 **Estimated Effort:** 24-32 hours  
-**User Stories:** 5 accountant stories  
+**UX Pattern:** Control Tower + Resilient Design  
+**User Stories:** 6 accountant stories  
 
 **Features:**
-1. Dedicated "Accountant" role (read-only financial access)
-2. Payments Register view
-3. Export buttons for AR Aging, Payments, Tax reports
-4. Revenue Recognition feature validation/completion
+1. **Dedicated Accountant Role**
+   - Read-only financial access (view only, no modifications)
+   - "Read-Only Access" badge in header
+   - Disabled action buttons with tooltip explanations
+   - Email invitation workflow for external accountants
+2. **Payments Register View**
+   - High-density table with advanced filtering
+   - Export options (Excel, CSV, QuickBooks IIF, Xero)
+   - Reconciliation status tracking
+   - Transaction ID and fee tracking
+3. **AR Aging Report Export**
+   - Multiple formats (Excel with charts, CSV, PDF)
+   - Historical trend chart (12 months)
+   - Scheduled monthly delivery option
+4. **Bulk Invoice PDF Export**
+   - 3-step wizard for selection and options
+   - Async processing with progress bar
+   - ZIP archive with 24-hour expiration
+   - Email notification when ready
+5. **Revenue Recognition Schedule**
+   - GAAP/IFRS 15 compliance indicators
+   - Month-by-month breakdown table
+   - Excel export with journal entries
+6. **Sales Tax Summary Report**
+   - Summary by jurisdiction
+   - Tax-exempt transaction tracking
+   - Export formats for tax software (Avalara, TaxJar)
 
-**Dependencies:** Phase 9 (Export classes, TaxReportService)
+**Implementation Checklist:**
+- Backend: Add accountant role, PaymentReconciliationService, enhance ArAgingExport, BulkInvoiceExportJob
+- Frontend: Accountant dashboard, payments register, bulk export wizard, tax summary view
+- Testing: Role permission restrictions, payments register filtering, bulk PDF with 500+ invoices
+- Documentation: Role creation guide, reconciliation workflow, revenue recognition methodology
+
+**Dependencies:** Phase 9 (ExportService, TaxReportService, ArAgingExport)
+
+**Success Metrics:** 70%+ accountant adoption, 60% reconciliation time reduction, 100% register accuracy
 
 ---
 
 ### Phase 14: Technician Efficiency & Context Awareness
 **Priority:** MEDIUM-LOW  
 **Estimated Effort:** 24-32 hours  
-**User Stories:** 4 technician stories  
+**UX Pattern:** State-Aware + Contextual Indicators  
+**User Stories:** 6 technician stories  
 
 **Features:**
-1. AR status indicator in ticket/work order view
-2. Contract coverage lookup (service included in AYCE?)
-3. Barcode scanning integration (mobile)
-4. Inventory system integration (if available)
+1. **Client AR Status Indicator**
+   - Color-coded badges (green/yellow/orange/red)
+   - Tooltip with days overdue and amount
+   - Action guidance based on status
+   - 5-minute cache per company
+2. **Contract Coverage Lookup**
+   - Real-time coverage check before time entry
+   - Visual states (covered/partially/not covered/unknown)
+   - Links to subscription details
+   - Configurable coverage rules engine
+3. **My Utilization Dashboard**
+   - Personal metrics (billable hours, utilization rate)
+   - Target indicators and streak counters
+   - Gamification elements (badges, peer comparison)
+   - Mobile-first design
+4. **Daily Timesheet View**
+   - High-density table with inline editing
+   - Quick timer controls per ticket
+   - Keyboard shortcuts for navigation
+   - Real-time save on blur
+5. **Barcode Scanning for Hardware**
+   - HTML5 camera API integration
+   - Auto-capture and decode (QR, Code128, EAN)
+   - Match against inventory catalog
+   - Fallback to manual entry
+6. **Real-Time Inventory Levels**
+   - Stock quantity with color-coded indicators
+   - Reserved quantity tracking
+   - Alternative part suggestions
+   - WebSocket or polling updates
 
-**Dependencies:** Phase 3 (Existing mobile views)
+**Implementation Checklist:**
+- Backend: ContractCoverageService, TechnicianUtilizationService, barcode library (QuaggaJS), inventory API
+- Frontend: x-ar-status-badge, x-contract-coverage-indicator, my-stats dashboard, timesheet view, x-barcode-scanner
+- Testing: AR status accuracy, coverage logic, barcode formats, mobile camera integration
+- Documentation: AR status logic, coverage rules, timesheet shortcuts, barcode setup
+
+**Dependencies:** Existing BillableEntry model, optional Inventory module integration
+
+**Success Metrics:** 85%+ timesheet adoption, 40% time entry reduction, 30% fewer billability errors
 
 ---
 
 ### Phase 15: Client Portal Self-Service Enhancements
 **Priority:** HIGH  
 **Estimated Effort:** 28-36 hours  
+**UX Pattern:** Guided Journey + Resilient Design  
 **User Stories:** 7 client admin stories  
 
 **Features:**
-1. PDF download button in Portal
-2. Procurement tracking module (hardware orders)
-3. Self-service company profile editing
-4. Client-managed team invites
-5. Ticket/user attribution on invoice line items
+1. **Invoice PDF Download**
+   - Instant generation (< 2s)
+   - Professional branded template
+   - Watermark for unpaid invoices
+   - Download action auditing
+2. **Auto-Pay Configuration**
+   - 3-step wizard (Payment Method → Schedule → Confirmation)
+   - Retry logic for failed payments (3 attempts)
+   - Email confirmation required to enable
+   - Preview of next charge
+3. **Self-Service Profile Editing**
+   - Inline editing with real-time validation
+   - Address verification API integration
+   - Approval workflow for critical fields
+   - Audit trail of all changes
+4. **Team Member Management**
+   - Portal roles (Admin, Billing, Viewer)
+   - Email invitation flow with magic links
+   - Email domain verification
+   - Max users limit (configurable, default: 10)
+5. **Procurement Tracking**
+   - Order status timeline (stepper component)
+   - Carrier tracking integration (FedEx, UPS, USPS)
+   - Email/SMS delivery notifications
+   - New procurement_orders table
+6. **Invoice Line Item Transparency**
+   - Expandable line item details
+   - Ticket and user attribution
+   - "Question this charge" link
+   - Privacy-configurable display
+7. **Enhanced Dispute Submission**
+   - Per-line-item dispute capability
+   - Multi-file upload with drag-and-drop
+   - Status tracking timeline
+   - Improved wizard UX
 
-**Dependencies:** Phase 9 (PDF templates), Phase 2 (QuoteConversionService)
+**Implementation Checklist:**
+- Backend: Auto-pay fields, ProcessAutopayInvoicesJob, procurement_orders table, line item attribution
+- Frontend: Auto-pay wizard, profile editor, team manager, order tracking, line item expander
+- Testing: PDF generation, auto-pay scheduling, profile approval, procurement tracking, dispute workflow
+- Documentation: Auto-pay guide, team management, procurement integration, dispute resolution
+
+**Dependencies:** Phase 9 (PDF templates), Phase 2 (QuoteConversionService), existing DisputeService
+
+**Success Metrics:** 60%+ auto-pay adoption, 50% support reduction, 80% disputes resolved in 48hrs, NPS > 60
 
 ---
 
 ### Phase 16: Sales Pipeline & Quote-to-Cash
 **Priority:** HIGH  
 **Estimated Effort:** 32-40 hours  
-**User Stories:** 11 sales agent stories  
+**UX Pattern:** Control Tower + Guided Journey  
+**User Stories:** 8 sales agent stories  
 
 **Features:**
-1. Quote view notification webhooks
-2. Quote cloning feature
-3. Margin display in Quote Builder
-4. Margin floor validation
-5. Product Bundle CRUD and integration
-6. "Convert to Invoice/Subscription" button in Quote UI
+1. **Pipeline Kanban Dashboard**
+   - Drag-and-drop board with 6 stages
+   - Quote cards with value and margin %
+   - Pipeline metrics panel (total value, conversion rate)
+   - Filters (date, value, agent, client type)
+2. **Quote View Tracking & Notifications**
+   - View event tracking (first view, re-views, duration)
+   - Multi-channel notifications (in-app, email, Slack, SMS)
+   - Rules engine (avoid spam, detect high interest)
+   - Privacy compliance (GDPR, Do Not Track)
+3. **Quote Cloning**
+   - Modal wizard for clone configuration
+   - Smart adjustments (client pricing, expiration)
+   - Link to original quote
+   - Clone conversion tracking
+4. **Margin Display & Validation**
+   - Real-time margin calculation
+   - Color-coded indicator (green/yellow/red)
+   - Per-item and overall quote margins
+   - Integration with profitability analytics
+5. **Margin Floor Enforcement**
+   - Warning modal for below-floor quotes
+   - Manager approval workflow
+   - Override permission tracking
+   - Visual indicators (red border, warning badge)
+6. **Product Bundles**
+   - Pre-built bundles with default quantities
+   - Search/filter by category
+   - Customization options
+   - Bundle discount logic
+   - Common templates pre-seeded
+7. **One-Click Quote Conversion**
+   - Confirmation modal with preview
+   - Options: one-time invoice, subscription, hybrid
+   - Automatic welcome email
+   - Link to Finance Admin review queue
+8. **Quote Expiration Management**
+   - Default 30-day expiration
+   - ExpireQuotesJob (daily)
+   - Pre-expiration reminders (7 days, 1 day)
+   - Renewal workflow
 
-**Dependencies:** Phase 1 (ProductBundle model), Phase 2 (QuoteConversionService)
+**Implementation Checklist:**
+- Backend: PipelineController, quote_views table, cloneQuote(), margin validation, bundle CRUD, ExpireQuotesJob
+- Frontend: Pipeline kanban, view tracking JS, clone wizard, x-margin-indicator, bundle selector, conversion modal
+- Testing: Kanban drag-and-drop, view tracking, margin calculations, bundle customization, conversion logic
+- Documentation: Pipeline workflow, view tracking privacy, margin methodology, bundle management, conversion process
+
+**Dependencies:** Phase 1 (ProductBundle model), Phase 2 (QuoteConversionService, QuoteTrackingService)
+
+**Success Metrics:** 15% conversion improvement, 50% faster follow-ups, 95% margin compliance, 70% time reduction
 
 ---
 
