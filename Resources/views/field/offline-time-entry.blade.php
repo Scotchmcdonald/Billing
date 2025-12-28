@@ -374,7 +374,9 @@ function offlineTimeEntry() {
         filteredEntries() {
             const now = new Date();
             const today = now.toISOString().split('T')[0];
-            const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+            // Create new Date object to avoid mutation
+            const weekDate = new Date(now.getTime());
+            const startOfWeek = new Date(weekDate.setDate(weekDate.getDate() - weekDate.getDay()));
             const weekStart = startOfWeek.toISOString().split('T')[0];
 
             if (this.tab === 'today') {
@@ -432,6 +434,11 @@ function offlineTimeEntry() {
                 if (this.isOnline) {
                     this.syncNow();
                 }
+            };
+
+            transaction.onerror = (error) => {
+                console.error('Failed to save entry:', error);
+                alert('Failed to save time entry. Please try again.');
             };
         },
 

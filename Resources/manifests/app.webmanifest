@@ -73,12 +73,5 @@
         }
     ],
     "categories": ["productivity", "business", "utilities"],
-    "prefer_related_applications": false,
-    "offline_enabled": true,
-    "features": [
-        "Offline time entry",
-        "Background sync",
-        "IndexedDB storage",
-        "Push notifications"
-    ]
+    "prefer_related_applications": false
 }

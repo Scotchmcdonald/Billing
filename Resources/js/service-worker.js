@@ -102,10 +102,15 @@ async function syncTimeEntries() {
         
         for (const entry of unsyncedEntries) {
             try {
+                // Get CSRF token from cookies
+                const csrfToken = await getCsrfToken();
+                
                 const response = await fetch('/api/time-entries', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken || '',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify(entry)
                 });
@@ -189,6 +194,30 @@ function markAsSynced(db, entryId) {
             }
         };
     });
+}
+
+// Get CSRF token from cookies
+function getCsrfToken() {
+    const cookies = self.clients.matchAll().then(clients => {
+        if (clients.length > 0) {
+            return clients[0].postMessage({ type: 'GET_CSRF_TOKEN' });
+        }
+    });
+    
+    // Fallback: parse from cookie string
+    const name = 'XSRF-TOKEN=';
+    const decodedCookie = decodeURIComponent(document.cookie || '');
+    const ca = decodedCookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return Promise.resolve(c.substring(name.length, c.length));
+        }
+    }
+    return Promise.resolve('');
 }
 
 // Message event
