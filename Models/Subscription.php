@@ -26,6 +26,8 @@ class Subscription extends CashierSubscription
         'next_billing_date' => 'date',
         'is_active' => 'boolean',
         'metadata' => 'array',
+        'contract_start_date' => 'date',
+        'contract_end_date' => 'date',
     ];
 
     public function items()

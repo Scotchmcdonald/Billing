@@ -14,6 +14,8 @@ class Quote extends Model
     protected $casts = [
         'valid_until' => 'date',
         'total' => 'decimal:2',
+        'viewed_at' => 'datetime',
+        'accepted_at' => 'datetime',
     ];
 
     public function company()
@@ -24,5 +26,33 @@ class Quote extends Model
     public function lineItems()
     {
         return $this->hasMany(QuoteLineItem::class);
+    }
+
+    /**
+     * Check if the quote has been viewed.
+     */
+    public function getIsViewedAttribute(): bool
+    {
+        return !is_null($this->viewed_at);
+    }
+
+    /**
+     * Check if the quote has been accepted.
+     */
+    public function getIsAcceptedAttribute(): bool
+    {
+        return !is_null($this->accepted_at);
+    }
+
+    /**
+     * Get the number of days it took for the quote to be viewed.
+     */
+    public function getDaysToViewAttribute(): ?int
+    {
+        if (!$this->is_viewed || !$this->created_at) {
+            return null;
+        }
+        
+        return $this->created_at->diffInDays($this->viewed_at);
     }
 }

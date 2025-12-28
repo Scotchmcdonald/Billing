@@ -47,4 +47,26 @@ class BillableEntry extends Model
     {
         return $query->whereNull('invoice_line_item_id')->where('is_billable', true);
     }
+
+    /**
+     * Get the receipt URL if available.
+     * Only returns URLs for valid receipt paths stored in the receipts directory.
+     */
+    public function getReceiptAttribute(): ?string
+    {
+        if (!$this->receipt_path) {
+            return null;
+        }
+        
+        // Sanitize the path by removing any directory traversal attempts
+        $sanitizedPath = basename($this->receipt_path);
+        
+        // Validate that the sanitized path is not empty and contains valid characters
+        if (empty($sanitizedPath) || !preg_match('/^[a-zA-Z0-9_\-\.]+$/', $sanitizedPath)) {
+            return null;
+        }
+        
+        // Use Laravel's Storage facade for secure path handling
+        return \Illuminate\Support\Facades\Storage::url('receipts/' . $sanitizedPath);
+    }
 }

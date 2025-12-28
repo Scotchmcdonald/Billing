@@ -8,6 +8,9 @@ use Modules\Billing\Models\BillingAuthorization;
 use Modules\Billing\Models\PriceOverride;
 use Modules\Billing\Models\Subscription;
 use Modules\Billing\Models\Invoice;
+use Modules\Billing\Models\Retainer;
+use Modules\Billing\Models\CreditNote;
+use Modules\Billing\Models\BillableEntry;
 use App\Models\Customer;
 use App\Models\User;
 
@@ -75,6 +78,16 @@ class Company extends Model
     public function payments()
     {
         return $this->hasMany(\Modules\Billing\Models\Payment::class);
+    }
+
+    public function retainers()
+    {
+        return $this->hasMany(Retainer::class);
+    }
+
+    public function creditNotes()
+    {
+        return $this->hasMany(CreditNote::class);
     }
 
     /**
