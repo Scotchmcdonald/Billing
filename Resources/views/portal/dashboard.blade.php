@@ -6,13 +6,13 @@
             </h2>
             @if(auth()->user()->isAdmin() || auth()->user()->can('finance.admin'))
                 <div class="flex items-center">
-                    <span class="text-sm text-gray-500 mr-2">Viewing as Customer</span>
-                    <a href="{{ route('billing.finance.portal-access') }}" class="text-sm text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded-md border border-indigo-200">
+                    <span class="text-sm text-gray-500 dark:text-gray-400 mr-2">Viewing as Customer</span>
+                    <a href="{{ route('billing.finance.portal-access') }}" class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 bg-primary-50 dark:bg-primary-900 px-3 py-1 rounded-lg border border-primary-200 dark:border-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-150">
                         {{ __('Switch Company') }}
                     </a>
                 </div>
             @elseif(isset($hasMultipleCompanies) && $hasMultipleCompanies)
-                <a href="{{ route('billing.portal.entry') }}" class="text-sm text-indigo-600 hover:text-indigo-900">
+                <a href="{{ route('billing.portal.entry') }}" class="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded transition-colors duration-150">
                     {{ __('Switch Company') }}
                 </a>
             @endif
@@ -45,16 +45,16 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
             <!-- Tabs -->
-            <div class="border-b border-gray-200 mb-6">
+            <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
                 <nav class="-mb-px flex space-x-8" aria-label="Tabs">
                     <button @click="activeTab = 'services'" 
-                        :class="activeTab === 'services' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        :class="activeTab === 'services' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm focus:outline-none transition-colors duration-150">
                         My Services
                     </button>
                     <button @click="activeTab = 'history'" 
-                        :class="activeTab === 'history' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">
+                        :class="activeTab === 'history' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm focus:outline-none transition-colors duration-150">
                         Billing History
                     </button>
                     <button @click="activeTab = 'methods'" 

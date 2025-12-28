@@ -1,10 +1,10 @@
 <?php
 
-namespace Database\Seeders;
+namespace Modules\Billing\Database\Seeders;
 
 use App\Models\User;
 use Modules\Billing\Models\Company;
-use Modules\Billing\Models\Product;
+use Modules\Inventory\Models\Product;
 use Modules\Billing\Models\Invoice;
 use Modules\Billing\Models\InvoiceLineItem;
 use Modules\Billing\Models\Payment;
@@ -93,39 +93,57 @@ class FinOpsMasterSeeder extends Seeder
     }
     
     /**
+     * Split name into first and last name
+     */
+    private function splitName(string $name): array
+    {
+        $parts = explode(' ', $name, 2);
+        return [
+            'first_name' => $parts[0] ?? 'User',
+            'last_name' => $parts[1] ?? 'Unknown'
+        ];
+    }
+    
+    /**
      * Seed users including executives, admins, and technicians
      */
     private function seedUsers(): void
     {
         // Create Executives (for simulation testing)
         for ($i = 1; $i <= 3; $i++) {
+            $name = $this->splitName("Executive User{$i}");
             $user = User::create([
-                'name' => "Executive User {$i}",
+                'first_name' => $name['first_name'],
+                'last_name' => $name['last_name'],
                 'email' => "executive{$i}@finops.test",
                 'password' => Hash::make('password'),
-                'role' => 'executive',
+                'role' => User::ROLE_ADMIN,
             ]);
             $this->users['executives'][] = $user;
         }
         
         // Create Architects (for simulation testing)
         for ($i = 1; $i <= 3; $i++) {
+            $name = $this->splitName("Architect User{$i}");
             $user = User::create([
-                'name' => "Architect User {$i}",
+                'first_name' => $name['first_name'],
+                'last_name' => $name['last_name'],
                 'email' => "architect{$i}@finops.test",
                 'password' => Hash::make('password'),
-                'role' => 'architect',
+                'role' => User::ROLE_ADMIN,
             ]);
             $this->users['architects'][] = $user;
         }
         
         // Create Admins
         for ($i = 1; $i <= 2; $i++) {
+            $name = $this->splitName("Admin User{$i}");
             $user = User::create([
-                'name' => "Admin User {$i}",
+                'first_name' => $name['first_name'],
+                'last_name' => $name['last_name'],
                 'email' => "admin{$i}@finops.test",
                 'password' => Hash::make('password'),
-                'role' => 'admin',
+                'role' => User::ROLE_ADMIN,
             ]);
             $this->users['admins'][] = $user;
         }
@@ -138,13 +156,14 @@ class FinOpsMasterSeeder extends Seeder
             'Kevin Thompson', 'Nicole Davis', 'Brian Moore'
         ];
         
-        foreach ($technicianNames as $index => $name) {
+        foreach ($technicianNames as $index => $fullName) {
+            $name = $this->splitName($fullName);
             $user = User::create([
-                'name' => $name,
-                'email' => strtolower(str_replace(' ', '.', $name)) . '@finops.test',
+                'first_name' => $name['first_name'],
+                'last_name' => $name['last_name'],
+                'email' => strtolower(str_replace(' ', '.', $fullName)) . '@finops.test',
                 'password' => Hash::make('password'),
-                'role' => 'technician',
-                'hourly_cost' => $this->faker->numberBetween(30, 55), // Cost to company
+                'role' => User::ROLE_USER,
             ]);
             $this->technicians[] = $user;
             $this->users['technicians'][] = $user;
@@ -152,20 +171,26 @@ class FinOpsMasterSeeder extends Seeder
         
         // Create Client Admins and Users (will be assigned to companies later)
         for ($i = 1; $i <= 25; $i++) {
+            $fakerName = $this->faker->name();
+            $name = $this->splitName($fakerName);
             $this->users['client_admins'][] = User::create([
-                'name' => $this->faker->name(),
+                'first_name' => $name['first_name'],
+                'last_name' => $name['last_name'],
                 'email' => "client.admin{$i}@client.test",
                 'password' => Hash::make('password'),
-                'role' => 'client_admin',
+                'role' => User::ROLE_USER,
             ]);
         }
         
         for ($i = 1; $i <= 50; $i++) {
+            $fakerName = $this->faker->name();
+            $name = $this->splitName($fakerName);
             $this->users['client_users'][] = User::create([
-                'name' => $this->faker->name(),
+                'first_name' => $name['first_name'],
+                'last_name' => $name['last_name'],
                 'email' => "client.user{$i}@client.test",
                 'password' => Hash::make('password'),
-                'role' => 'client_user',
+                'role' => User::ROLE_USER,
             ]);
         }
     }

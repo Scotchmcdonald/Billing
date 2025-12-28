@@ -40,7 +40,7 @@
         @endif
 
         <!-- Filters -->
-        <form method="GET" action="{{ route('billing.finance.credit-notes.index') }}" class="bg-white shadow-sm rounded-lg p-6 mb-6">
+        <form method="GET" action="{{ route('billing.finance.credit-notes') }}" class="bg-white shadow-sm rounded-lg p-6 mb-6">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     <label for="company_id" class="block text-sm font-medium text-gray-700">Company</label>
@@ -75,7 +75,7 @@
             </div>
 
             <div class="mt-4 flex justify-end space-x-3">
-                <a href="{{ route('billing.finance.credit-notes.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                <a href="{{ route('billing.finance.credit-notes') }}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
                     Clear
                 </a>
                 <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-md text-sm font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">

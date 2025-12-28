@@ -25,6 +25,18 @@ class ExecutiveDashboardController extends Controller
         // Get key metrics
         $baseMetrics = $this->analyticsService->getMetricsWithComparison();
         
+        // Calculate MRR
+        $mrr = \Modules\Billing\Models\Subscription::where('is_active', true)->sum('effective_price');
+        
+        // Calculate total AR
+        $totalAr = \Modules\Billing\Models\Invoice::whereIn('status', ['sent', 'overdue'])->sum('total');
+        
+        // Count overdue invoices
+        $overdueCount = \Modules\Billing\Models\Invoice::where('status', 'overdue')->count();
+        
+        // Count active clients
+        $activeClients = \Modules\Billing\Models\Company::where('is_active', true)->count();
+        
         // Calculate churn rate
         $churnRate = $this->contractService->calculateChurnRate(now()->subDays(90), now());
         
@@ -41,11 +53,11 @@ class ExecutiveDashboardController extends Controller
         $alerts = $this->getAlerts();
         
         $metrics = [
-            'mrr' => $baseMetrics['mrr'],
-            'mrr_change' => $baseMetrics['mrr_change'] ?? 0,
-            'total_ar' => $baseMetrics['total_ar'] ?? 0,
-            'overdue_count' => $baseMetrics['overdue_invoices'] ?? 0,
-            'active_clients' => $baseMetrics['active_clients'] ?? 0,
+            'mrr' => $mrr,
+            'mrr_change' => 0, // TODO: Calculate MRR change month-over-month
+            'total_ar' => $totalAr,
+            'overdue_count' => $overdueCount,
+            'active_clients' => $activeClients,
             'at_risk_clients' => $atRiskClients->count(),
             'churn_rate' => $churnRate,
             'revenue_trend' => $revenueTrend,

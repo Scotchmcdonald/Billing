@@ -35,14 +35,24 @@ class AccountingExportService
         foreach ($companies as $company) {
             $churnRisk = $this->calculateChurnRisk($company);
             
+            // Calculate balance from invoices instead of calling Stripe API
+            $balance = $company->invoices()
+                ->whereIn('status', ['sent', 'overdue'])
+                ->sum('total');
+            
+            // Check subscription status from database
+            $isSubscribed = $company->subscriptions()
+                ->where('is_active', true)
+                ->exists();
+            
             $csv->insertOne([
                 $company->name,
                 $company->stripe_id,
                 $company->pm_type,
                 $company->pm_last_four,
-                $company->balance(), // Note: This might trigger API calls
+                number_format((float) $balance, 2),
                 $company->created_at->toIso8601String(),
-                $company->subscribed() ? 'Active' : 'Inactive',
+                $isSubscribed ? 'Active' : 'Inactive',
                 $churnRisk ? 'High' : 'Low'
             ]);
         }

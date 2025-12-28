@@ -8,20 +8,23 @@
             </div>
             <a 
                 href="{{ route('billing.quotes.create') }}" 
-                class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 transition"
+                class="px-4 py-3 bg-primary-600 dark:bg-primary-500 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 shadow-sm transition-all duration-150"
             >
+                <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
                 New Quote
             </a>
         </div>
 
         @if(session('success'))
-            <div class="mb-6 bg-success-50 border border-success-200 text-success-700 px-4 py-3 rounded-lg">
+            <div class="mb-6 bg-success-50 dark:bg-success-900 border border-success-200 dark:border-success-700 text-success-700 dark:text-success-200 px-4 py-3 rounded-lg transition-all duration-200">
                 {{ session('success') }}
             </div>
         @endif
 
         <!-- Filters -->
-        <div class="bg-white shadow-sm rounded-lg p-4 mb-6">
+        <div class="bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 rounded-lg p-4 mb-6">
             <form method="GET" class="flex flex-wrap gap-4 items-end">
                 <div class="flex-1 min-w-[200px]">
                     <label for="search" class="block text-xs font-semibold text-gray-700 mb-1">Search</label>

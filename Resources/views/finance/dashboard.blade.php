@@ -11,23 +11,23 @@
             <!-- Metrics Row -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                 <!-- MRR Card -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <div class="text-gray-500 text-sm font-medium uppercase tracking-wider">Monthly Recurring Revenue</div>
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700 sm:rounded-lg p-6 transition-all duration-200 hover:shadow-md">
+                    <div class="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Monthly Recurring Revenue</div>
                     <div class="mt-2 flex items-baseline">
-                        <span class="text-3xl font-bold text-gray-900">${{ number_format($totalMrr / 100, 2) }}</span>
-                        <span class="ml-2 text-sm font-medium text-emerald-600">+5.4%</span>
+                        <span class="text-3xl font-bold text-gray-900 dark:text-white">${{ number_format($totalMrr / 100, 2) }}</span>
+                        <span class="ml-2 text-sm font-medium text-success-600 dark:text-success-400">+5.4%</span>
                     </div>
                     <!-- Sparkline Placeholder -->
-                    <div class="mt-4 h-10 w-full bg-gray-50 rounded" x-data>
+                    <div class="mt-4 h-10 w-full bg-gray-50 dark:bg-gray-700 rounded" x-data>
                         <!-- Alpine.js sparkline would go here -->
                     </div>
                 </div>
 
                 <!-- AR Aging Summary -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <div class="text-gray-500 text-sm font-medium uppercase tracking-wider">AR Aging (> 30 Days)</div>
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700 sm:rounded-lg p-6 transition-all duration-200 hover:shadow-md">
+                    <div class="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase tracking-wider">AR Aging (> 30 Days)</div>
                     <div class="mt-2 flex items-baseline">
-                        <span class="text-3xl font-bold text-rose-600">${{ number_format(($arAging['31-60'] + $arAging['61-90'] + $arAging['90+']) / 100, 2) }}</span>
+                        <span class="text-3xl font-bold text-danger-600 dark:text-danger-400">${{ number_format(($arAging['31-60'] + $arAging['61-90'] + $arAging['90+']) / 100, 2) }}</span>
                     </div>
                     <div class="mt-4 text-xs text-gray-500">
                         <div class="flex justify-between"><span>31-60:</span> <span>${{ number_format($arAging['31-60']/100) }}</span></div>
@@ -37,23 +37,23 @@
                 </div>
 
                 <!-- Gross Profit -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <div class="text-gray-500 text-sm font-medium uppercase tracking-wider">Gross Profit (This Month)</div>
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700 sm:rounded-lg p-6 transition-all duration-200 hover:shadow-md">
+                    <div class="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Gross Profit (This Month)</div>
                     <div class="mt-2 flex items-baseline">
-                        <span class="text-3xl font-bold text-gray-900">${{ number_format($grossProfit / 100, 2) }}</span>
+                        <span class="text-3xl font-bold text-gray-900 dark:text-white">${{ number_format($grossProfit / 100, 2) }}</span>
                     </div>
-                    <div class="mt-4 text-sm text-gray-500">
-                        Margin: <span class="font-bold text-emerald-600">68%</span>
+                    <div class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+                        Margin: <span class="font-bold text-success-600 dark:text-success-400">68%</span>
                     </div>
                 </div>
 
                 <!-- Unbilled Time/Materials -->
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    <div class="text-gray-500 text-sm font-medium uppercase tracking-wider">Unbilled Items</div>
+                <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700 sm:rounded-lg p-6 transition-all duration-200 hover:shadow-md">
+                    <div class="text-gray-500 dark:text-gray-400 text-sm font-medium uppercase tracking-wider">Unbilled Items</div>
                     <div class="mt-2 flex items-baseline">
-                        <span class="text-3xl font-bold text-gray-900">$12,450.00</span>
+                        <span class="text-3xl font-bold text-gray-900 dark:text-white">$12,450.00</span>
                     </div>
-                    <div class="mt-4 text-sm text-gray-500">
+                    <div class="mt-4 text-sm text-gray-500 dark:text-gray-400">
                         Across 8 clients
                     </div>
                 </div>

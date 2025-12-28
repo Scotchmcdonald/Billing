@@ -47,7 +47,8 @@ class BillingServiceProvider extends ServiceProvider
 
     public function register()
     {
-        //
+        // Register BillingConfigServiceProvider to load settings from database
+        $this->app->register(BillingConfigServiceProvider::class);
     }
 
     protected function registerRoutes()

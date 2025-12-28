@@ -42,11 +42,11 @@
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
                                             @php
                                                 $margin = $row['gross_margin_percent'];
-                                                $colorClass = 'text-red-600';
+                                                $colorClass = 'text-danger-600 dark:text-danger-400';
                                                 if ($margin >= 40) {
-                                                    $colorClass = 'text-green-600';
+                                                    $colorClass = 'text-success-600 dark:text-success-400';
                                                 } elseif ($margin >= 20) {
-                                                    $colorClass = 'text-amber-600';
+                                                    $colorClass = 'text-warning-600 dark:text-warning-400';
                                                 }
                                             @endphp
                                             <span class="{{ $colorClass }} font-bold">

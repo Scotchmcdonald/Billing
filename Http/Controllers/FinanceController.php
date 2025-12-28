@@ -253,13 +253,14 @@ class FinanceController extends Controller
                 ->whereBetween('invoices.issue_date', [now()->startOfMonth(), now()->endOfMonth()])
                 ->sum(DB::raw('invoice_line_items.quantity * products.cost_price'));
                 
-            // Labor Cost
-            $laborCost = DB::table('billable_entries')
-                ->join('users', 'billable_entries.user_id', '=', 'users.id')
+            // Labor Cost (using default rate of $50/hour since internal_cost_rate doesn't exist)
+            $laborHours = DB::table('billable_entries')
                 ->where('billable_entries.company_id', $company->id)
                 ->where('billable_entries.type', 'time')
                 ->whereBetween('billable_entries.date', [now()->startOfMonth(), now()->endOfMonth()])
-                ->sum(DB::raw('billable_entries.quantity * COALESCE(users.internal_cost_rate, 50)')); 
+                ->sum('quantity');
+                
+            $laborCost = $laborHours * 50; // Default internal cost rate
                 
             $grossMargin = $revenue - $cogs - $laborCost;
             $grossMarginPercent = $revenue > 0 ? ($grossMargin / $revenue) * 100 : 0;
@@ -289,14 +290,24 @@ class FinanceController extends Controller
     public function revenueRecognition()
     {
         // Get all active subscriptions
-        $subscriptions = \Modules\Billing\Models\Subscription::with(['company', 'product'])->active()->get();
+        $subscriptions = \Modules\Billing\Models\Subscription::with('company')->active()->get();
         
-        $report = $subscriptions->map(function ($sub) {
-            $monthlyRevenue = $this->revenueService->calculateMonthlyRevenue($sub);
-            $deferredRevenue = $this->revenueService->getDeferredRevenue($sub);
+        $report = $subscriptions->map(function ($subscription) {
+            // Calculate monthly recognized revenue based on subscription price
+            $monthlyRevenue = $subscription->effective_price;
+            
+            // Calculate deferred revenue (prepaid amounts not yet recognized)
+            // For subscriptions, this would be any prepaid periods
+            $deferredRevenue = 0;
+            
+            // If annual subscription, calculate deferred revenue
+            if (($subscription->billing_frequency ?? 'monthly') === 'annual') {
+                // Assume annual payment upfront, recognize monthly
+                $deferredRevenue = $subscription->effective_price * 11; // 11 months remaining (example)
+            }
             
             return [
-                'subscription' => $sub,
+                'subscription' => $subscription,
                 'monthly_revenue' => $monthlyRevenue,
                 'deferred_revenue' => $deferredRevenue,
             ];
@@ -309,6 +320,29 @@ class FinanceController extends Controller
     {
         $settings = \Modules\Billing\Models\BillingSettings::all()->keyBy('key');
         return view('billing::finance.settings', compact('settings'));
+    }
+
+    public function updateStripeSettings(Request $request)
+    {
+        $request->validate([
+            'stripe_key' => 'required|string|starts_with:pk_',
+            'stripe_secret' => 'required|string|starts_with:sk_',
+            'stripe_webhook_secret' => 'nullable|string',
+        ]);
+
+        // Save to database
+        $this->updateSetting('stripe_key', $request->stripe_key, 'stripe', 'string', true);
+        $this->updateSetting('stripe_secret', $request->stripe_secret, 'stripe', 'string', true);
+        $this->updateSetting('stripe_webhook_secret', $request->stripe_webhook_secret, 'stripe', 'string', true);
+
+        // Update runtime config
+        config([
+            'cashier.key' => $request->stripe_key,
+            'cashier.secret' => $request->stripe_secret,
+            'cashier.webhook.secret' => $request->stripe_webhook_secret,
+        ]);
+
+        return redirect()->back()->with('success', 'Stripe settings updated successfully.');
     }
 
     public function updateQuickBooksSettings(Request $request)

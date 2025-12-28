@@ -11,7 +11,7 @@
                 <div class="p-6 text-gray-900">
                     
                     @if (session('success'))
-                        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                        <div class="bg-success-50 dark:bg-success-900 border border-success-200 dark:border-success-700 text-success-700 dark:text-success-200 px-4 py-3 rounded-lg relative mb-4 transition-all duration-200" role="alert">
                             <span class="block sm:inline">{{ session('success') }}</span>
                         </div>
                     @endif
@@ -48,28 +48,28 @@
                                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-bold">
                                                 {{ $change->new_quantity }}
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                <span class="{{ $change->delta > 0 ? 'text-green-600' : 'text-red-600' }}">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                <span class="{{ $change->delta > 0 ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400' }} font-semibold">
                                                     {{ $change->delta > 0 ? '+' : '' }}{{ $change->delta }}
                                                 </span>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-primary-100 dark:bg-primary-900 text-primary-800 dark:text-primary-200">
                                                     {{ ucfirst($change->source) }}
                                                 </span>
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                 {{ $change->created_at->format('M d, Y H:i') }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <div class="flex justify-end space-x-2">
                                                     <form action="{{ route('billing.finance.usage-review.approve', $change->id) }}" method="POST">
                                                         @csrf
-                                                        <button type="submit" class="text-green-600 hover:text-green-900">Approve</button>
+                                                        <button type="submit" class="text-success-600 dark:text-success-400 hover:text-success-800 dark:hover:text-success-300 focus:outline-none focus:ring-2 focus:ring-success-500 rounded px-2 py-1 transition-colors duration-150">Approve</button>
                                                     </form>
                                                     <form action="{{ route('billing.finance.usage-review.reject', $change->id) }}" method="POST">
                                                         @csrf
-                                                        <button type="submit" class="text-red-600 hover:text-red-900">Reject</button>
+                                                        <button type="submit" class="text-danger-600 dark:text-danger-400 hover:text-danger-800 dark:hover:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger-500 rounded px-2 py-1 transition-colors duration-150">Reject</button>
                                                     </form>
                                                 </div>
                                             </td>
