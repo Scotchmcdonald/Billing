@@ -33,6 +33,7 @@ class CreditNote extends Model
     protected $casts = [
         'amount' => 'integer',
         'applied_at' => 'datetime',
+        'issue_date' => 'datetime',
     ];
 
     /**
