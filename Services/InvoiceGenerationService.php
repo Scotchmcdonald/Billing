@@ -12,6 +12,9 @@ use Modules\Billing\Models\BillableEntry;
 
 class InvoiceGenerationService
 {
+    /**
+     * @return Collection<int, Invoice>
+     */
     public function generateMonthlyInvoices(Carbon $billingDate): Collection
     {
         $companies = Company::where('is_active', true)->get();
@@ -122,7 +125,7 @@ class InvoiceGenerationService
 
         return DB::transaction(function () use ($invoice) {
             // Generate real invoice number
-            $invoiceNumber = 'INV-' . now()->format('Y') . '-' . str_pad($invoice->id, 6, '0', STR_PAD_LEFT);
+            $invoiceNumber = 'INV-' . now()->format('Y') . '-' . str_pad((string) $invoice->id, 6, '0', STR_PAD_LEFT);
             
             $invoice->update([
                 'invoice_number' => $invoiceNumber,

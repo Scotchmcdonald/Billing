@@ -8,7 +8,7 @@ use Modules\Billing\Models\Company;
 use Modules\Billing\Models\BillingLog;
 use Modules\Billing\Services\AccountingExportService;
 use Illuminate\Support\Facades\DB;
-use Laravel\Cashier\Subscription;
+use Modules\Billing\Models\Subscription;
 
 use Modules\Billing\Services\ProrationCalculator;
 use Modules\Billing\Services\RevenueRecognitionService;
@@ -52,10 +52,8 @@ class FinanceController extends Controller
     public function dashboard()
     {
         // MRR Calculation: Sum of all active subscriptions
-        // This is a simplified calculation. In reality, we'd need to handle different intervals.
-        // Assuming standard Cashier tables
         try {
-            $totalMrr = Subscription::query()->active()->count() * 100; // Placeholder logic: $100 per sub
+            $totalMrr = Subscription::where('is_active', true)->sum('effective_price');
         } catch (\Exception $e) {
             $totalMrr = 0;
         }
@@ -83,6 +81,7 @@ class FinanceController extends Controller
 
         // Forecasting
         $forecastData = $this->forecastingService->forecastMRR(6);
+        \Illuminate\Support\Facades\Log::info('Dashboard Forecast Data:', $forecastData);
         $churnRate = $this->forecastingService->forecastChurn();
 
         // Advanced Analytics
@@ -103,7 +102,12 @@ class FinanceController extends Controller
                 'anomaly_score' => 15,
                 'line_items_count' => 5,
                 'unbilled_items' => true,
-                'status' => 'pending_review'
+                'status' => 'pending_review',
+                'line_items' => [
+                    ['description' => 'Standard Plan Subscription', 'amount' => 1000.00],
+                    ['description' => 'Extra Storage (50GB)', 'amount' => 50.00],
+                    ['description' => 'Priority Support', 'amount' => 200.00],
+                ]
             ],
             [
                 'id' => 2,
@@ -113,7 +117,11 @@ class FinanceController extends Controller
                 'anomaly_score' => 85, // High anomaly
                 'line_items_count' => 12,
                 'unbilled_items' => false,
-                'status' => 'pending_review'
+                'status' => 'pending_review',
+                'line_items' => [
+                    ['description' => 'Enterprise Plan Subscription', 'amount' => 3000.00],
+                    ['description' => 'Consulting Hours (2)', 'amount' => 400.00],
+                ]
             ],
              [
                 'id' => 3,
@@ -123,7 +131,11 @@ class FinanceController extends Controller
                 'anomaly_score' => 5,
                 'line_items_count' => 20,
                 'unbilled_items' => true,
-                'status' => 'pending_review'
+                'status' => 'pending_review',
+                'line_items' => [
+                    ['description' => 'Dedicated Server Cluster', 'amount' => 12000.00],
+                    ['description' => 'Managed Services', 'amount' => 3000.00],
+                ]
             ],
         ]; 
         return view('billing::finance.pre-flight', compact('invoices'));

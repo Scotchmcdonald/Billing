@@ -6,6 +6,33 @@ use Laravel\Cashier\Subscription as CashierSubscription;
 use Modules\Billing\Models\Company;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property string $name
+ * @property string $stripe_status
+ * @property string|null $stripe_id
+ * @property string|null $stripe_price
+ * @property int $product_id
+ * @property int $quantity
+ * @property float $effective_price
+ * @property string $billing_frequency
+ * @property \Illuminate\Support\Carbon $starts_at
+ * @property \Illuminate\Support\Carbon|null $ends_at
+ * @property \Illuminate\Support\Carbon $next_billing_date
+ * @property bool $is_active
+ * @property array $metadata
+ * @property \Illuminate\Support\Carbon|null $contract_start_date
+ * @property \Illuminate\Support\Carbon|null $contract_end_date
+ * @property string|null $renewal_status
+ * @property float $monthly_amount
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * 
+ * @property-read \Illuminate\Database\Eloquent\Collection|SubscriptionItem[] $items
+ * @property-read Company $company
+ * @property-read \Modules\Inventory\Models\Product $product
+ */
 class Subscription extends CashierSubscription
 {
     use HasFactory;

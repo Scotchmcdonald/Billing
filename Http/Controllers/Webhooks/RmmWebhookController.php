@@ -13,6 +13,9 @@ use Carbon\Carbon;
 
 class RmmWebhookController extends Controller
 {
+    /**
+     * @var ProrationCalculator
+     */
     protected $prorationCalculator;
 
     public function __construct(ProrationCalculator $prorationCalculator)
@@ -20,7 +23,7 @@ class RmmWebhookController extends Controller
         $this->prorationCalculator = $prorationCalculator;
     }
 
-    public function deviceCount(Request $request)
+    public function deviceCount(Request $request): \Illuminate\Http\JsonResponse
     {
         // Validate Request
         $validated = $request->validate([
@@ -30,8 +33,9 @@ class RmmWebhookController extends Controller
             'device_list' => 'array',
         ]);
 
-        $companyId = $validated['company_id'];
-        $timestamp = Carbon::parse($validated['timestamp']);
+        $companyId = (int) $validated['company_id'];
+        $timestampStr = $validated['timestamp'];
+        $timestamp = Carbon::parse(is_string($timestampStr) ? $timestampStr : now());
         $deviceList = $validated['device_list'] ?? [];
 
         // Filter Stale Devices
@@ -41,7 +45,8 @@ class RmmWebhookController extends Controller
         if (!empty($deviceList)) {
             foreach ($deviceList as $device) {
                 if (is_array($device) && isset($device['last_seen'])) {
-                    $lastSeen = Carbon::parse($device['last_seen']);
+                    $lastSeenStr = $device['last_seen'];
+                    $lastSeen = Carbon::parse(is_string($lastSeenStr) ? $lastSeenStr : now());
                     if ($lastSeen->diffInDays(now()) > 30) {
                         $excludedDevices[] = $device;
                         continue;
@@ -52,12 +57,13 @@ class RmmWebhookController extends Controller
             // Override count with active devices count
             $newCount = count($activeDevices);
         } else {
-            $newCount = $validated['device_count'];
+            $newCount = (int) $validated['device_count'];
         }
 
         Log::info("RMM Webhook received for Company ID: {$companyId}, Count: {$newCount} (Excluded: " . count($excludedDevices) . ")");
 
         // Find Company
+        /** @var Company|null $company */
         $company = Company::find($companyId);
         if (!$company) {
             Log::warning("RMM Webhook: Company not found ID: {$companyId}");
@@ -68,6 +74,7 @@ class RmmWebhookController extends Controller
         // Assuming product.category = 'rmm_monitoring' or similar logic.
         // For now, we'll look for a subscription that looks like RMM.
         // In a real scenario, we'd query based on product attributes.
+        /** @var Subscription|null $subscription */
         $subscription = $company->subscriptions()
             ->where('name', 'like', '%RMM%') // Simplified logic
             ->where('stripe_status', 'active')

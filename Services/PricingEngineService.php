@@ -17,6 +17,9 @@ class PricingEngineService
         $cacheKey = "price_{$company->id}_{$product->id}_{$date->format('Y-m-d')}";
 
         return Cache::remember($cacheKey, 300, function () use ($company, $product, $date) {
+            $price = $product->base_price;
+            $source = 'base';
+
             // 1. Check for active PriceOverride
             $override = $company->priceOverrides()
                 ->where('product_id', $product->id)
@@ -30,7 +33,6 @@ class PricingEngineService
                 ->first();
 
             if ($override) {
-                $price = 0.0;
                 if ($override->type === 'fixed') {
                     $price = $override->value;
                 } elseif ($override->type === 'discount_percent') {
@@ -38,39 +40,50 @@ class PricingEngineService
                 } elseif ($override->type === 'markup_percent') {
                     $price = $product->base_price * (1 + ($override->value / 100));
                 }
+                $source = 'override';
+            } else {
+                // 2. Check ProductTierPrice
+                $tierPrice = $product->tierPrices()
+                    ->where('tier', $company->pricing_tier)
+                    ->where(function ($query) use ($date) {
+                        $query->whereNull('starts_at')->orWhere('starts_at', '<=', $date);
+                    })
+                    ->where(function ($query) use ($date) {
+                        $query->whereNull('ends_at')->orWhere('ends_at', '>=', $date);
+                    })
+                    ->orderBy('starts_at', 'desc')
+                    ->first();
+
+                if ($tierPrice) {
+                    $price = $tierPrice->price;
+                    $source = 'tier';
+                }
+            }
+
+            // Calculate Tax Credit for Non-Profits
+            $taxCredit = 0.0;
+            if ($company->pricing_tier === 'non_profit') {
+                // Determine Standard Price (Standard Tier or Base Price)
+                $standardTierPrice = $product->tierPrices()
+                    ->where('tier', 'standard')
+                    ->where(function ($query) use ($date) {
+                        $query->whereNull('starts_at')->orWhere('starts_at', '<=', $date);
+                    })
+                    ->where(function ($query) use ($date) {
+                        $query->whereNull('ends_at')->orWhere('ends_at', '>=', $date);
+                    })
+                    ->orderBy('starts_at', 'desc')
+                    ->first();
                 
-                return new PriceResult(
-                    price: $price,
-                    source: 'override',
-                    margin_percent: $product->getGrossMarginPercent($price)
-                );
+                $standardPrice = $standardTierPrice ? $standardTierPrice->price : $product->base_price;
+                $taxCredit = max(0, $standardPrice - $price);
             }
 
-            // 2. Check ProductTierPrice
-            $tierPrice = $product->tierPrices()
-                ->where('tier', $company->pricing_tier)
-                ->where(function ($query) use ($date) {
-                    $query->whereNull('starts_at')->orWhere('starts_at', '<=', $date);
-                })
-                ->where(function ($query) use ($date) {
-                    $query->whereNull('ends_at')->orWhere('ends_at', '>=', $date);
-                })
-                ->orderBy('starts_at', 'desc')
-                ->first();
-
-            if ($tierPrice) {
-                return new PriceResult(
-                    price: $tierPrice->price,
-                    source: 'tier',
-                    margin_percent: $product->getGrossMarginPercent($tierPrice->price)
-                );
-            }
-
-            // 3. Fallback to Base Price
             return new PriceResult(
-                price: $product->base_price,
-                source: 'base',
-                margin_percent: $product->getGrossMarginPercent($product->base_price)
+                price: $price,
+                source: $source,
+                margin_percent: $product->getGrossMarginPercent($price),
+                tax_credit: $taxCredit
             );
         });
     }

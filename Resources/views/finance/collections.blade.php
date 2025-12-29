@@ -6,16 +6,18 @@
     </x-slot>
 
     <div class="py-12">
-    <div class="container mx-auto px-4 py-8">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Collections</h1>
-            <p class="mt-2 text-gray-600 dark:text-gray-400">
-                Manage overdue invoices and collection activities
-            </p>
-        </div>
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            @include('billing::finance._partials.nav')
 
-        <!-- State Indicator -->
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Collections</h1>
+                <p class="mt-2 text-gray-600 dark:text-gray-400">
+                    Manage overdue invoices and collection activities
+                </p>
+            </div>
+
+            <!-- State Indicator -->
         <x-billing::state-indicator state="idle" />
 
         <!-- Summary Cards -->

@@ -16,10 +16,21 @@ class XeroService
 
     public function __construct()
     {
-        $this->clientId = config('services.xero.client_id', '');
-        $this->clientSecret = config('services.xero.client_secret', '');
-        $this->tenantId = config('services.xero.tenant_id', '');
-        $this->accessToken = config('services.xero.access_token', '');
+        /** @var string $clientId */
+        $clientId = config('services.xero.client_id', '');
+        $this->clientId = $clientId;
+
+        /** @var string $clientSecret */
+        $clientSecret = config('services.xero.client_secret', '');
+        $this->clientSecret = $clientSecret;
+
+        /** @var string $tenantId */
+        $tenantId = config('services.xero.tenant_id', '');
+        $this->tenantId = $tenantId;
+
+        /** @var string $accessToken */
+        $accessToken = config('services.xero.access_token', '');
+        $this->accessToken = $accessToken;
     }
 
     /**
@@ -38,7 +49,7 @@ class XeroService
                 'Contact' => [
                     'Name' => $invoice->company->name,
                 ],
-                'DateString' => $invoice->created_at->format('Y-m-d'),
+                'DateString' => $invoice->created_at?->format('Y-m-d'),
                 'DueDateString' => $invoice->due_date->format('Y-m-d'),
                 'LineAmountTypes' => 'Exclusive',
                 'LineItems' => $this->buildLineItems($invoice),
@@ -59,7 +70,9 @@ class XeroService
                 ]);
 
             if ($response->successful()) {
-                $xeroInvoiceId = $response->json('Invoices.0.InvoiceID');
+                /** @var string|int $id */
+                $id = $response->json('Invoices.0.InvoiceID');
+                $xeroInvoiceId = strval($id);
                 
                 Log::info('Invoice synced to Xero', [
                     'invoice_id' => $invoice->id,
@@ -99,14 +112,17 @@ class XeroService
         }
 
         try {
+            /** @var string $accountCode */
+            $accountCode = config('services.xero.payment_account_code', '1200');
+
             $payload = [
                 'Invoice' => [
                     'InvoiceID' => $payment->invoice->xero_invoice_id,
                 ],
                 'Account' => [
-                    'Code' => config('services.xero.payment_account_code', '1200'),
+                    'Code' => $accountCode,
                 ],
-                'Date' => $payment->created_at->format('Y-m-d'),
+                'Date' => $payment->created_at?->format('Y-m-d'),
                 'Amount' => $payment->amount / 100,
                 'Reference' => "Payment #{$payment->id}",
             ];
@@ -123,7 +139,9 @@ class XeroService
                 ]);
 
             if ($response->successful()) {
-                $xeroPaymentId = $response->json('Payments.0.PaymentID');
+                /** @var string|int $id */
+                $id = $response->json('Payments.0.PaymentID');
+                $xeroPaymentId = strval($id);
                 
                 Log::info('Payment synced to Xero', [
                     'payment_id' => $payment->id,
@@ -151,6 +169,8 @@ class XeroService
 
     /**
      * Build line items from invoice billable entries.
+     *
+     * @return array<int, array<string, mixed>>
      */
     protected function buildLineItems(Invoice $invoice): array
     {
@@ -160,7 +180,7 @@ class XeroService
             $lineItems[] = [
                 'Description' => $entry->description,
                 'Quantity' => $entry->quantity,
-                'UnitAmount' => $entry->price / 100,
+                'UnitAmount' => $entry->rate, // Removed / 100 as rate is likely float
                 'AccountCode' => $this->getAccountCode($entry->type),
             ];
         }
@@ -187,11 +207,23 @@ class XeroService
      */
     protected function getAccountCode(string $type): string
     {
-        return match ($type) {
-            'service' => config('services.xero.service_account_code', '4000'),
-            'product' => config('services.xero.product_account_code', '4100'),
-            'labor' => config('services.xero.labor_account_code', '4200'),
-            default => config('services.xero.default_account_code', '4000'),
+        $key = match ($type) {
+            'service' => 'services.xero.service_account_code',
+            'product' => 'services.xero.product_account_code',
+            'labor' => 'services.xero.labor_account_code',
+            default => 'services.xero.default_account_code',
         };
+
+        $default = match ($type) {
+            'service' => '4000',
+            'product' => '4100',
+            'labor' => '4200',
+            default => '4000',
+        };
+
+        /** @var string $code */
+        $code = config($key, $default);
+        
+        return $code;
     }
 }

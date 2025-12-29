@@ -29,17 +29,50 @@ class ProvisionQuote
         // 2. Create Subscriptions
         foreach ($quote->lineItems as $item) {
             if ($item->product_id) {
-                // Assuming product has info about subscription type
-                // For now, just create a subscription record
+                // Create subscription with quote details
                 Subscription::create([
                     'company_id' => $company->id,
                     'name' => $item->description,
                     'stripe_status' => 'active',
                     'quantity' => $item->quantity,
+                    'billing_frequency' => $quote->billing_frequency,
+                    'effective_price' => $item->unit_price, // This is already updated to the correct frequency price
+                    'starts_at' => now(),
+                    'next_billing_date' => $quote->billing_frequency === 'annually' ? now()->addYear() : now()->addMonth(),
                 ]);
             }
         }
 
-        Log::info("Quote #{$quote->id} provisioned for Company #{$company->id}");
+        // 3. Create Invoice
+        $invoice = \Modules\Billing\Models\Invoice::create([
+            'company_id' => $company->id,
+            'invoice_number' => 'INV-' . strtoupper(uniqid()),
+            'issue_date' => now(),
+            'due_date' => now()->addDays(30),
+            'status' => 'draft',
+            'currency' => 'USD',
+            'notes' => 'Generated from Quote #' . $quote->quote_number,
+        ]);
+
+        $subtotal = 0;
+        foreach ($quote->lineItems as $item) {
+            $lineTotal = $item->quantity * $item->unit_price;
+            $subtotal += $lineTotal;
+            
+            \Modules\Billing\Models\InvoiceLineItem::create([
+                'invoice_id' => $invoice->id,
+                'description' => $item->description,
+                'quantity' => $item->quantity,
+                'unit_price' => $item->unit_price,
+                'subtotal' => $lineTotal,
+            ]);
+        }
+        
+        $invoice->update([
+            'subtotal' => $subtotal,
+            'total' => $subtotal,
+        ]);
+
+        Log::info("Quote #{$quote->id} provisioned for Company #{$company->id}. Invoice #{$invoice->id} created.");
     }
 }

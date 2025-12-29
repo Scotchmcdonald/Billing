@@ -5,6 +5,33 @@ namespace Modules\Billing\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property string $pricing_tier
+ * @property string $quote_number
+ * @property \Illuminate\Support\Carbon $valid_until
+ * @property float $total
+ * @property string $status
+ * @property string $billing_frequency
+ * @property bool $requires_approval
+ * @property float $approval_threshold_percent
+ * @property \Illuminate\Support\Carbon|null $viewed_at
+ * @property string|null $viewed_ip
+ * @property \Illuminate\Support\Carbon|null $accepted_at
+ * @property string|null $signer_name
+ * @property string|null $signer_email
+ * @property string|null $signature_data
+ * @property string $public_token
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * 
+ * @property-read Company $company
+ * @property-read \Illuminate\Database\Eloquent\Collection|QuoteLineItem[] $lineItems
+ * @property-read bool $is_viewed
+ * @property-read bool $is_accepted
+ * @property-read int|null $days_to_view
+ */
 class Quote extends Model
 {
     use HasFactory;
@@ -16,14 +43,16 @@ class Quote extends Model
         'total' => 'decimal:2',
         'viewed_at' => 'datetime',
         'accepted_at' => 'datetime',
+        'requires_approval' => 'boolean',
+        'approval_threshold_percent' => 'decimal:2',
     ];
 
-    public function company()
+    public function company(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
 
-    public function lineItems()
+    public function lineItems(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(QuoteLineItem::class);
     }

@@ -7,6 +7,23 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\User;
 
+/**
+ * @property int $id
+ * @property int $invoice_id
+ * @property int $company_id
+ * @property int $amount
+ * @property string $reason
+ * @property string|null $notes
+ * @property int|null $issued_by
+ * @property \Illuminate\Support\Carbon|null $applied_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * 
+ * @property-read Invoice $invoice
+ * @property-read Company $company
+ * @property-read User|null $issuedBy
+ */
 class CreditNote extends Model
 {
     use HasFactory, SoftDeletes;

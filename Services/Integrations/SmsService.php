@@ -13,9 +13,17 @@ class SmsService
 
     public function __construct()
     {
-        $this->accountSid = config('services.twilio.account_sid', '');
-        $this->authToken = config('services.twilio.auth_token', '');
-        $this->fromNumber = config('services.twilio.from_number', '');
+        /** @var string $accountSid */
+        $accountSid = config('services.twilio.account_sid', '');
+        $this->accountSid = $accountSid;
+
+        /** @var string $authToken */
+        $authToken = config('services.twilio.auth_token', '');
+        $this->authToken = $authToken;
+
+        /** @var string $fromNumber */
+        $fromNumber = config('services.twilio.from_number', '');
+        $this->fromNumber = $fromNumber;
     }
 
     /**
@@ -71,7 +79,7 @@ class SmsService
         $company = $invoice->company;
         
         // Check if company has opted in for SMS
-        if (!$company->sms_notifications_enabled ?? false) {
+        if (!($company->sms_notifications_enabled ?? false)) {
             return;
         }
 
@@ -93,7 +101,7 @@ class SmsService
     {
         $company = $payment->company;
         
-        if (!$company->sms_notifications_enabled ?? false) {
+        if (!($company->sms_notifications_enabled ?? false)) {
             return;
         }
 

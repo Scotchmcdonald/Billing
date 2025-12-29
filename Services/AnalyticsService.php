@@ -10,6 +10,7 @@ use Carbon\Carbon;
 
 class AnalyticsService
 {
+    /** @var ForecastingService */
     protected $forecastingService;
 
     public function __construct(ForecastingService $forecastingService)
@@ -17,6 +18,9 @@ class AnalyticsService
         $this->forecastingService = $forecastingService;
     }
 
+    /**
+     * @return array<string, float>
+     */
     public function getMetrics(): array
     {
         return [
@@ -113,6 +117,8 @@ class AnalyticsService
 
     /**
      * Calculate effective hourly rate for all companies.
+     *
+     * @return \Illuminate\Support\Collection<int, array{company_id: int, company_name: string, effective_hourly_rate: float}>
      */
     public function calculateEffectiveHourlyRateAll(): \Illuminate\Support\Collection
     {
@@ -129,6 +135,9 @@ class AnalyticsService
 
     /**
      * Get metrics with period comparison (month-over-month or year-over-year).
+     *
+     * @param string $period
+     * @return array{current: array<string, float>, previous: array<string, float>, changes: array<string, array{value: float, percent: float, direction: string}>, period: string}
      */
     public function getMetricsWithComparison(string $period = 'mom'): array
     {
@@ -155,6 +164,9 @@ class AnalyticsService
 
     /**
      * Get metrics for a specific period.
+     *
+     * @param Carbon $date
+     * @return array<string, float>
      */
     protected function getMetricsForPeriod(Carbon $date): array
     {
@@ -165,6 +177,10 @@ class AnalyticsService
 
     /**
      * Calculate percentage change between two values.
+     *
+     * @param float $previous
+     * @param float $current
+     * @return array{value: float, percent: float, direction: string}
      */
     protected function calculateChange(float $previous, float $current): array
     {

@@ -11,11 +11,15 @@ class TeamsService
 
     public function __construct()
     {
-        $this->webhookUrl = config('services.teams.webhook_url', '');
+        /** @var string $webhookUrl */
+        $webhookUrl = config('services.teams.webhook_url', '');
+        $this->webhookUrl = $webhookUrl;
     }
 
     /**
      * Send notification to Microsoft Teams.
+     * 
+     * @param array<int, array<string, string>> $facts
      */
     public function sendNotification(string $title, string $message, array $facts = [], string $color = '0078D4'): bool
     {
@@ -75,14 +79,14 @@ class TeamsService
         $facts = [
             ['name' => 'Company', 'value' => $company->name],
             ['name' => 'Invoice', 'value' => $invoice->invoice_number],
-            ['name' => 'Amount', 'value' => '$' . number_format($payment->amount / 100, 2)],
-            ['name' => 'Method', 'value' => ucfirst($payment->method)],
-            ['name' => 'Date', 'value' => $payment->created_at->format('M d, Y H:i')],
+            ['name' => 'Amount', 'value' => '$' . number_format($payment->amount, 2)],
+            ['name' => 'Method', 'value' => ucfirst($payment->payment_method)],
+            ['name' => 'Date', 'value' => $payment->created_at?->format('M d, Y H:i') ?? 'N/A'],
         ];
 
         $this->sendNotification(
             '💰 Payment Received',
-            "Payment of $" . number_format($payment->amount / 100, 2) . " received from {$company->name}",
+            "Payment of $" . number_format($payment->amount, 2) . " received from {$company->name}",
             $facts,
             '28A745' // Green
         );
@@ -97,8 +101,8 @@ class TeamsService
 
         $facts = [
             ['name' => 'Company', 'value' => $company->name],
-            ['name' => 'Quote #', 'value' => $quote->id],
-            ['name' => 'Amount', 'value' => '$' . number_format($quote->total / 100, 2)],
+            ['name' => 'Quote #', 'value' => (string) $quote->id],
+            ['name' => 'Amount', 'value' => '$' . number_format($quote->total, 2)],
             ['name' => 'Accepted', 'value' => now()->format('M d, Y H:i')],
         ];
 
@@ -121,9 +125,9 @@ class TeamsService
         $facts = [
             ['name' => 'Company', 'value' => $company->name],
             ['name' => 'Invoice', 'value' => $invoice->invoice_number],
-            ['name' => 'Amount', 'value' => '$' . number_format($invoice->total / 100, 2)],
+            ['name' => 'Amount', 'value' => '$' . number_format($invoice->total, 2)],
             ['name' => 'Due Date', 'value' => $invoice->due_date->format('M d, Y')],
-            ['name' => 'Days Overdue', 'value' => abs($daysOverdue)],
+            ['name' => 'Days Overdue', 'value' => (string) abs($daysOverdue)],
         ];
 
         $this->sendNotification(
@@ -144,9 +148,9 @@ class TeamsService
         $facts = [
             ['name' => 'Company', 'value' => $company->name],
             ['name' => 'Plan', 'value' => $subscription->plan_name ?? 'N/A'],
-            ['name' => 'MRR', 'value' => '$' . number_format($subscription->monthly_amount / 100, 2)],
-            ['name' => 'Expires', 'value' => $subscription->contract_end_date->format('M d, Y')],
-            ['name' => 'Days Remaining', 'value' => $daysRemaining],
+            ['name' => 'MRR', 'value' => '$' . number_format($subscription->monthly_amount, 2)],
+            ['name' => 'Expires', 'value' => $subscription->contract_end_date?->format('M d, Y') ?? 'N/A'],
+            ['name' => 'Days Remaining', 'value' => (string) $daysRemaining],
         ];
 
         $color = $daysRemaining <= 30 ? 'DC3545' : 'FFC107'; // Red if < 30 days, amber otherwise

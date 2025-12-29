@@ -107,6 +107,8 @@ class QuoteConversionService
     /**
      * Convert a quote to both an invoice and subscription.
      * Useful for initial invoice + recurring subscription.
+     *
+     * @return array{invoice: Invoice, subscription: Subscription}
      */
     public function convertToInvoiceAndSubscription(Quote $quote): array
     {
@@ -185,6 +187,6 @@ class QuoteConversionService
             $nextNumber = 1;
         }
 
-        return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        return $prefix . str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
     }
 }

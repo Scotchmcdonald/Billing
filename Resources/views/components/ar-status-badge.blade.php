@@ -46,7 +46,7 @@
     @if($showTooltip)
     <div x-show="open" x-transition class="absolute z-10 px-3 py-2 text-xs font-normal text-white bg-gray-900 rounded-lg shadow-sm" style="bottom: 100%; left: 50%; transform: translateX(-50%);">
         @if($daysOverdue > 0)
-            <p>{{ $daysOverdue }} days overdue</p>
+            <p>{{ number_format($daysOverdue, 0) }} days overdue</p>
             <p>${{ number_format($amount / 100, 2) }} outstanding</p>
         @else
             <p>All invoices current</p>

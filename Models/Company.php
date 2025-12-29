@@ -16,6 +16,42 @@ use App\Models\User;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string|null $email
+ * @property string|null $phone
+ * @property string|null $address
+ * @property string|null $city
+ * @property string|null $state
+ * @property string|null $zip
+ * @property string|null $country
+ * @property string|null $vat_number
+ * @property array $settings
+ * @property float $margin_floor_percent
+ * @property bool $is_active
+ * @property int|null $primary_contact_id
+ * @property string|null $pricing_tier
+ * @property string|null $scenario
+ * @property string|null $stripe_id
+ * @property string|null $pm_type
+ * @property string|null $pm_last_four
+ * @property string|null $trial_ends_at
+ * @property bool $sms_notifications_enabled
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * 
+ * @property-read \Illuminate\Database\Eloquent\Collection|BillingAuthorization[] $billingAuthorizations
+ * @property-read \Illuminate\Database\Eloquent\Collection|User[] $users
+ * @property-read User|null $primaryContact
+ * @property-read \Illuminate\Database\Eloquent\Collection|PriceOverride[] $priceOverrides
+ * @property-read \Illuminate\Database\Eloquent\Collection|Subscription[] $subscriptions
+ * @property-read \Illuminate\Database\Eloquent\Collection|Invoice[] $invoices
+ * @property-read \Illuminate\Database\Eloquent\Collection|Retainer[] $retainers
+ * @property-read \Illuminate\Database\Eloquent\Collection|CreditNote[] $creditNotes
+ * @property-read \Illuminate\Database\Eloquent\Collection|BillableEntry[] $billableEntries
+ * @property-read Customer|null $customer
+ */
 class Company extends Model
 {
     use Billable, HasFactory;
@@ -33,59 +69,67 @@ class Company extends Model
         'is_active' => 'boolean',
     ];
 
-    public function billingAuthorizations()
+    public function billingAuthorizations(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(BillingAuthorization::class);
     }
 
-    public function users()
+    public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class, 'billing_authorizations')
                     ->withPivot('role')
                     ->withTimestamps();
     }
 
-    public function primaryContact()
+    public function primaryContact(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'primary_contact_id');
     }
 
-    public function customers()
+    public function customers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Customer::class);
     }
 
-    public function priceOverrides()
+    public function quotes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Quote::class);
+    }
+
+    public function priceOverrides(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(PriceOverride::class);
     }
 
-    public function subscriptions()
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<Subscription>
+     */
+    public function subscriptions(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Subscription::class);
     }
 
-    public function invoices()
+    public function invoices(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Invoice::class);
     }
 
-    public function billableEntries()
+    public function billableEntries(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(BillableEntry::class);
     }
 
-    public function payments()
+    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\Modules\Billing\Models\Payment::class);
     }
 
-    public function retainers()
+    public function retainers(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Retainer::class);
     }
 
-    public function creditNotes()
+    public function creditNotes(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(CreditNote::class);
     }

@@ -6,6 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\User;
 
+/**
+ * @property int $id
+ * @property string $auditable_type
+ * @property int $auditable_id
+ * @property string $event
+ * @property array<string, mixed>|null $old_values
+ * @property array<string, mixed>|null $new_values
+ * @property int|null $user_id
+ * @property string|null $ip_address
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read User|null $user
+ * @property-read Model|null $auditable
+ */
 class BillingAuditLog extends Model
 {
     use HasFactory;
@@ -19,6 +33,8 @@ class BillingAuditLog extends Model
 
     /**
      * Get the user who performed this action.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
     public function user()
     {
@@ -27,6 +43,8 @@ class BillingAuditLog extends Model
 
     /**
      * Get the auditable model.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\MorphTo
      */
     public function auditable()
     {

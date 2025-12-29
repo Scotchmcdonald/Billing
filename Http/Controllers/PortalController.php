@@ -7,7 +7,13 @@ use Illuminate\Http\Request;
 use Modules\Billing\Services\BillingAuthorizationService;
 use Modules\Billing\Services\PaymentGatewayService;
 use Modules\Billing\Models\Company;
+use Modules\Billing\Models\Invoice;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
+
+use Modules\Billing\Models\Quote;
+use Modules\Billing\Events\QuoteApproved;
+use Modules\Billing\Events\QuoteRejected;
 
 class PortalController extends Controller
 {
@@ -61,6 +67,7 @@ class PortalController extends Controller
 
         $invoices = [];
         $payments = [];
+        $quotes = [];
         $paymentMethods = collect();
 
         try {
@@ -77,6 +84,12 @@ class PortalController extends Controller
         }
 
         try {
+            $quotes = $company->quotes()->whereIn('status', ['sent', 'accepted', 'rejected'])->orderBy('created_at', 'desc')->get();
+        } catch (\Exception $e) {
+            report($e);
+        }
+
+        try {
             $paymentMethods = $company->paymentMethods();
         } catch (\Exception $e) {
             report($e);
@@ -86,10 +99,121 @@ class PortalController extends Controller
             'company' => $company,
             'invoices' => $invoices,
             'payments' => $payments,
+            'quotes' => $quotes,
             'subscriptions' => $company->subscriptions,
             'paymentMethods' => $paymentMethods,
             'hasMultipleCompanies' => $hasMultipleCompanies,
         ]);
+    }
+
+    public function showQuote(Company $company, int $id)
+    {
+        $quote = $company->quotes()->with('lineItems')->findOrFail($id);
+        
+        // Track view
+        if (!$quote->viewed_at) {
+            $quote->update(['viewed_at' => now()]);
+            
+            \Modules\Billing\Models\BillingLog::create([
+                'company_id' => $company->id,
+                'event' => 'quote.viewed',
+                'description' => "Quote #{$quote->quote_number} viewed in portal by " . Auth::user()->name,
+                'payload' => ['quote_id' => $quote->id, 'user_id' => Auth::id()],
+                'level' => 'info'
+            ]);
+        }
+
+        return view('billing::portal.quotes.show', compact('company', 'quote'));
+    }
+
+    public function acceptQuote(Request $request, Company $company, int $id)
+    {
+        $quote = $company->quotes()->with('lineItems')->findOrFail($id);
+        
+        $request->validate([
+            'terms_accepted' => 'required|accepted',
+            'notes' => 'nullable|string',
+            'billing_frequency' => 'required|in:monthly,annually',
+        ]);
+
+        if ($quote->is_accepted) {
+            return back()->with('error', 'This quote has already been accepted.');
+        }
+
+        if ($quote->valid_until < now()) {
+            return back()->with('error', 'This quote has expired.');
+        }
+
+        // Update prices based on selected frequency
+        $frequency = $request->billing_frequency;
+        $total = 0;
+
+        foreach ($quote->lineItems as $item) {
+            $price = $frequency === 'monthly' 
+                ? ($item->unit_price_monthly ?? $item->unit_price) 
+                : ($item->unit_price_annually ?? ($item->unit_price * 12));
+            
+            $subtotal = $price * $item->quantity;
+            
+            $item->update([
+                'unit_price' => $price,
+                'subtotal' => $subtotal,
+            ]);
+            
+            $total += $subtotal;
+        }
+
+        $quote->update([
+            'accepted_at' => now(),
+            'accepted_by_name' => Auth::user()->name,
+            'accepted_by_email' => Auth::user()->email,
+            'status' => 'accepted',
+            'billing_frequency' => $frequency,
+            'total' => $total,
+            'notes' => $quote->notes . ($request->notes ? "\n\nAcceptance Note: " . $request->notes : ''),
+        ]);
+
+        \Modules\Billing\Models\BillingLog::create([
+            'company_id' => $company->id,
+            'event' => 'quote.accepted',
+            'description' => "Quote #{$quote->quote_number} accepted in portal by " . Auth::user()->name . " ({$frequency})",
+            'payload' => ['quote_id' => $quote->id, 'user_id' => Auth::id(), 'billing_frequency' => $frequency],
+            'level' => 'info'
+        ]);
+
+        event(new QuoteApproved($quote));
+
+        return back()->with('success', 'Quote accepted successfully.');
+    }
+
+    public function rejectQuote(Request $request, Company $company, int $id)
+    {
+        $quote = $company->quotes()->findOrFail($id);
+        
+        $request->validate([
+            'rejection_reason' => 'required|string',
+        ]);
+
+        if ($quote->status !== 'sent') {
+            return back()->with('error', 'Cannot reject this quote.');
+        }
+
+        $quote->update([
+            'status' => 'rejected',
+            'notes' => $quote->notes . "\n\nRejection Reason: " . $request->rejection_reason . " (by " . Auth::user()->name . ")",
+        ]);
+
+        \Modules\Billing\Models\BillingLog::create([
+            'company_id' => $company->id,
+            'event' => 'quote.rejected',
+            'description' => "Quote #{$quote->quote_number} rejected in portal by " . Auth::user()->name,
+            'payload' => ['quote_id' => $quote->id, 'reason' => $request->rejection_reason, 'user_id' => Auth::id()],
+            'level' => 'warning'
+        ]);
+
+        event(new QuoteRejected($quote, $request->rejection_reason));
+
+        return back()->with('success', 'Quote rejected.');
     }
 
     public function paymentWizard(Company $company)
@@ -151,5 +275,16 @@ class PortalController extends Controller
             'company' => $company,
             'users' => $company->users,
         ]);
+    }
+
+    public function downloadPdf(Company $company, Invoice $invoice)
+    {
+        // Ensure invoice belongs to company
+        if ($invoice->company_id !== $company->id) {
+            abort(403);
+        }
+
+        $pdf = Pdf::loadView('billing::pdf.invoice', ['invoice' => $invoice]);
+        return $pdf->download('invoice-' . $invoice->invoice_number . '.pdf');
     }
 }

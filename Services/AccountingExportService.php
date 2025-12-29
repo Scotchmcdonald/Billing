@@ -8,12 +8,14 @@ use Modules\Billing\Models\Company;
 use League\Csv\Writer;
 use Illuminate\Support\Collection;
 
+use Modules\Billing\Models\Invoice;
+
 class AccountingExportService
 {
     /**
      * Generate a CSV export for accounting purposes.
      *
-     * @param Collection $companies
+     * @param Collection<int, Company> $companies
      * @return string
      */
     public function generateCsv(Collection $companies): string
@@ -51,7 +53,7 @@ class AccountingExportService
                 $company->pm_type,
                 $company->pm_last_four,
                 number_format((float) $balance, 2),
-                $company->created_at->toIso8601String(),
+                $company->created_at ? $company->created_at->toIso8601String() : '',
                 $isSubscribed ? 'Active' : 'Inactive',
                 $churnRisk ? 'High' : 'Low'
             ]);
@@ -83,7 +85,7 @@ class AccountingExportService
     /**
      * Generate a Revenue Recognition Report broken down by Category.
      *
-     * @param Collection $invoices
+     * @param Collection<int, Invoice> $invoices
      * @return string
      */
     public function generateRevenueRecognitionReport(Collection $invoices): string
@@ -102,7 +104,7 @@ class AccountingExportService
         ]);
 
         foreach ($invoices as $invoice) {
-            foreach ($invoice->items as $item) {
+            foreach ($invoice->lineItems as $item) {
                 $product = $item->product;
                 $revenue = $item->subtotal;
                 $cost = $product ? ($product->cost_price * $item->quantity) : 0;
@@ -110,7 +112,7 @@ class AccountingExportService
 
                 $csv->insertOne([
                     $invoice->id,
-                    $invoice->created_at->toDateString(),
+                    $invoice->created_at ? $invoice->created_at->toDateString() : '',
                     $product ? $product->category : 'Uncategorized',
                     $item->description,
                     $revenue,

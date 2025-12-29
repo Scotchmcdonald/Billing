@@ -16,8 +16,14 @@ class GoCardlessService
 
     public function __construct()
     {
-        $this->accessToken = config('services.gocardless.access_token');
-        $this->environment = config('services.gocardless.environment', 'sandbox');
+        /** @var string $accessToken */
+        $accessToken = config('services.gocardless.access_token');
+        $this->accessToken = $accessToken;
+
+        /** @var string $environment */
+        $environment = config('services.gocardless.environment', 'sandbox');
+        $this->environment = $environment;
+
         $this->baseUrl = $this->environment === 'live'
             ? 'https://api.gocardless.com'
             : 'https://api-sandbox.gocardless.com';
@@ -25,6 +31,8 @@ class GoCardlessService
 
     /**
      * Create customer in GoCardless
+     *
+     * @return array<string, mixed>|null
      */
     public function createCustomer(Company $company): ?array
     {
@@ -48,14 +56,18 @@ class GoCardlessService
                 ]);
 
             if ($response->successful()) {
-                $customerId = $response->json('customers.id');
+                /** @var string|int $id */
+                $id = $response->json('customers.id');
+                $customerId = strval($id);
                 
                 Log::info('GoCardless customer created', [
                     'company_id' => $company->id,
                     'customer_id' => $customerId
                 ]);
 
-                return $response->json('customers');
+                /** @var array<string, mixed> $data */
+                $data = $response->json('customers');
+                return $data;
             }
 
             Log::error('GoCardless customer creation failed', ['response' => $response->body()]);
@@ -71,6 +83,8 @@ class GoCardlessService
 
     /**
      * Create mandate (authorization for direct debit)
+     *
+     * @return array<string, mixed>|null
      */
     public function createMandate(string $customerId): ?array
     {
@@ -100,7 +114,9 @@ class GoCardlessService
                 return null;
             }
 
-            $bankAccountId = $bankAccountResponse->json('customer_bank_accounts.id');
+            /** @var string|int $id */
+            $id = $bankAccountResponse->json('customer_bank_accounts.id');
+            $bankAccountId = strval($id);
 
             // Create mandate
             $mandateResponse = Http::withToken($this->accessToken)
@@ -123,7 +139,10 @@ class GoCardlessService
                     'customer_id' => $customerId,
                     'mandate_id' => $mandateResponse->json('mandates.id')
                 ]);
-                return $mandateResponse->json('mandates');
+                
+                /** @var array<string, mixed> $data */
+                $data = $mandateResponse->json('mandates');
+                return $data;
             }
 
             Log::error('GoCardless mandate creation failed', ['response' => $mandateResponse->body()]);
@@ -139,6 +158,8 @@ class GoCardlessService
 
     /**
      * Create payment
+     *
+     * @return array<string, mixed>|null
      */
     public function createPayment(Invoice $invoice, string $mandateId): ?array
     {
@@ -151,7 +172,7 @@ class GoCardlessService
                 ->timeout(30)
                 ->post("{$this->baseUrl}/payments", [
                     'payments' => [
-                        'amount' => $invoice->total_amount - $invoice->paid_amount, // in pence
+                        'amount' => (int) (($invoice->total - $invoice->paid_amount) * 100), // in pence
                         'currency' => 'GBP',
                         'description' => "Invoice #{$invoice->invoice_number}",
                         'metadata' => [
@@ -169,7 +190,10 @@ class GoCardlessService
                     'invoice_id' => $invoice->id,
                     'payment_id' => $response->json('payments.id')
                 ]);
-                return $response->json('payments');
+                
+                /** @var array<string, mixed> $data */
+                $data = $response->json('payments');
+                return $data;
             }
 
             Log::error('GoCardless payment creation failed', ['response' => $response->body()]);
@@ -197,7 +221,9 @@ class GoCardlessService
                 ->get("{$this->baseUrl}/payments/{$paymentId}");
 
             if ($response->successful()) {
-                return $response->json('payments.status');
+                /** @var string|int $status */
+                $status = $response->json('payments.status');
+                return strval($status);
             }
 
             return null;
@@ -212,11 +238,22 @@ class GoCardlessService
 
     /**
      * Handle webhook event
+     *
+     * @param array<string, mixed> $payload
      */
     public function handleWebhook(array $payload): void
     {
         try {
-            foreach ($payload['events'] ?? [] as $event) {
+            $events = $payload['events'] ?? [];
+            if (!is_array($events)) {
+                return;
+            }
+
+            foreach ($events as $event) {
+                if (!is_array($event)) {
+                    continue;
+                }
+
                 $action = $event['action'] ?? '';
                 $resourceType = $event['resource_type'] ?? '';
 
@@ -236,9 +273,17 @@ class GoCardlessService
         }
     }
 
+    /**
+     * @param array<string, mixed> $event
+     */
     protected function handlePaymentEvent(array $event): void
     {
-        $paymentId = $event['links']['payment'] ?? null;
+        $links = $event['links'] ?? [];
+        if (!is_array($links)) {
+            return;
+        }
+
+        $paymentId = $links['payment'] ?? null;
         $action = $event['action'] ?? '';
 
         if (!$paymentId) {
@@ -262,9 +307,17 @@ class GoCardlessService
         }
     }
 
+    /**
+     * @param array<string, mixed> $event
+     */
     protected function handleMandateEvent(array $event): void
     {
-        $mandateId = $event['links']['mandate'] ?? null;
+        $links = $event['links'] ?? [];
+        if (!is_array($links)) {
+            return;
+        }
+
+        $mandateId = $links['mandate'] ?? null;
         $action = $event['action'] ?? '';
 
         Log::info('GoCardless mandate event', [

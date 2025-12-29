@@ -16,9 +16,18 @@ class PayPalService
 
     public function __construct()
     {
-        $this->clientId = config('services.paypal.client_id');
-        $this->clientSecret = config('services.paypal.client_secret');
-        $this->mode = config('services.paypal.mode', 'sandbox');
+        /** @var string $clientId */
+        $clientId = config('services.paypal.client_id');
+        $this->clientId = $clientId;
+
+        /** @var string $clientSecret */
+        $clientSecret = config('services.paypal.client_secret');
+        $this->clientSecret = $clientSecret;
+
+        /** @var string $mode */
+        $mode = config('services.paypal.mode', 'sandbox');
+        $this->mode = $mode;
+
         $this->baseUrl = $this->mode === 'live' 
             ? 'https://api-m.paypal.com' 
             : 'https://api-m.sandbox.paypal.com';
@@ -37,7 +46,9 @@ class PayPalService
                 ]);
 
             if ($response->successful()) {
-                return $response->json('access_token');
+                /** @var string $token */
+                $token = $response->json('access_token');
+                return $token;
             }
 
             Log::error('PayPal OAuth failed', ['response' => $response->body()]);
@@ -50,6 +61,8 @@ class PayPalService
 
     /**
      * Create PayPal order for invoice
+     *
+     * @return array<string, mixed>|null
      */
     public function createOrder(Invoice $invoice): ?array
     {
@@ -68,7 +81,7 @@ class PayPalService
                         'description' => "Invoice #{$invoice->invoice_number}",
                         'amount' => [
                             'currency_code' => 'USD',
-                            'value' => number_format($invoice->total_amount / 100, 2, '.', '')
+                            'value' => number_format((float) $invoice->total, 2, '.', '')
                         ]
                     ]],
                     'application_context' => [
@@ -84,7 +97,10 @@ class PayPalService
                     'invoice_id' => $invoice->id,
                     'order_id' => $response->json('id')
                 ]);
-                return $response->json();
+                
+                /** @var array<string, mixed> $data */
+                $data = $response->json();
+                return $data;
             }
 
             Log::error('PayPal order creation failed', ['response' => $response->body()]);
@@ -100,6 +116,8 @@ class PayPalService
 
     /**
      * Capture payment for approved order
+     *
+     * @return array<string, mixed>|null
      */
     public function captureOrder(string $orderId): ?array
     {
@@ -115,7 +133,10 @@ class PayPalService
 
             if ($response->successful()) {
                 Log::info('PayPal payment captured', ['order_id' => $orderId]);
-                return $response->json();
+                
+                /** @var array<string, mixed> $data */
+                $data = $response->json();
+                return $data;
             }
 
             Log::error('PayPal capture failed', ['response' => $response->body()]);
@@ -131,6 +152,8 @@ class PayPalService
 
     /**
      * Create subscription billing plan
+     *
+     * @return array<string, mixed>|null
      */
     public function createSubscriptionPlan(string $name, int $priceInCents, string $interval = 'MONTH'): ?array
     {
@@ -168,7 +191,10 @@ class PayPalService
 
             if ($response->successful()) {
                 Log::info('PayPal plan created', ['plan_id' => $response->json('id')]);
-                return $response->json();
+                
+                /** @var array<string, mixed> $data */
+                $data = $response->json();
+                return $data;
             }
 
             Log::error('PayPal plan creation failed', ['response' => $response->body()]);
@@ -181,6 +207,8 @@ class PayPalService
 
     /**
      * Process refund
+     *
+     * @return array<string, mixed>|null
      */
     public function refund(Payment $payment, int $amountInCents): ?array
     {
@@ -207,7 +235,10 @@ class PayPalService
                     'payment_id' => $payment->id,
                     'refund_id' => $response->json('id')
                 ]);
-                return $response->json();
+                
+                /** @var array<string, mixed> $data */
+                $data = $response->json();
+                return $data;
             }
 
             Log::error('PayPal refund failed', ['response' => $response->body()]);

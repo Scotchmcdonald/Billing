@@ -15,6 +15,15 @@ class UsageChange extends Model
         'metadata' => 'array',
     ];
 
+    protected $appends = [
+        'delta',
+    ];
+
+    public function getDeltaAttribute()
+    {
+        return $this->new_quantity - $this->old_quantity;
+    }
+
     public function company()
     {
         return $this->belongsTo(Company::class);

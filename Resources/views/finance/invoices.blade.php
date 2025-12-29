@@ -1,29 +1,28 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Invoices') }}
-        </h2>
     </x-slot>
 
     <div class="py-12">
-    <div class="container mx-auto px-4 py-8">
-        <!-- Header -->
-        <div class="mb-8 flex justify-between items-center">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Invoices</h1>
-                <p class="mt-2 text-gray-600 dark:text-gray-400">
-                    Manage and track all invoices
-                </p>
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ __('Invoices') }}</h1>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Manage and track your invoices</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button type="button" class="inline-flex items-center px-4 py-2 bg-primary-600 dark:bg-primary-500 border border-transparent rounded-lg font-semibold text-sm text-white hover:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 shadow-sm transition-all duration-150">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Create Invoice
+                    </button>
+                </div>
             </div>
-            <button type="button" class="inline-flex items-center px-4 py-3 bg-primary-600 dark:bg-primary-500 border border-transparent rounded-lg font-semibold text-sm text-white hover:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 shadow-sm transition-all duration-150">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                </svg>
-                Create Invoice
-            </button>
-        </div>
 
-        <!-- State Indicator -->
+            @include('billing::finance._partials.nav')
+
+            <!-- State Indicator -->
         <x-billing::state-indicator state="idle" />
 
         <!-- Filters -->

@@ -13,6 +13,8 @@ class ClientHealthService
     /**
      * Calculate a health score for a company (0-100).
      * Higher score = healthier client relationship.
+     *
+     * @return array{score: float, factors: array<string, array{score: int, status: string, detail: string}>, risk_level: string, recommendations: array<int, string>}
      */
     public function calculateHealthScore(Company $company): array
     {
@@ -42,6 +44,8 @@ class ClientHealthService
 
     /**
      * Get companies at risk based on health score threshold.
+     *
+     * @return Collection<int, Company>
      */
     public function getAtRiskClients(int $threshold = 40): Collection
     {
@@ -57,6 +61,8 @@ class ClientHealthService
 
     /**
      * Get individual health factors for a company.
+     *
+     * @return array<string, array{score: int, status: string, detail: string}>
      */
     public function getHealthFactors(Company $company): array
     {
@@ -71,6 +77,8 @@ class ClientHealthService
 
     /**
      * Assess profitability factor.
+     *
+     * @return array{score: int, status: string, detail: string}
      */
     protected function assessProfitability(Company $company): array
     {
@@ -83,13 +91,13 @@ class ClientHealthService
             return ['score' => 50, 'status' => 'unknown', 'detail' => 'No recent invoices'];
         }
 
-        $totalRevenue = $invoices->sum('subtotal');
-        $totalCost = 0;
+        $totalRevenue = (float) $invoices->sum('subtotal');
+        $totalCost = 0.0;
 
         foreach ($invoices as $invoice) {
             foreach ($invoice->lineItems as $item) {
                 if ($item->product) {
-                    $totalCost += $item->quantity * ($item->product->cost_price ?? 0);
+                    $totalCost += $item->quantity * ((float) ($item->product->cost_price ?? 0));
                 }
             }
         }
@@ -109,6 +117,8 @@ class ClientHealthService
 
     /**
      * Assess payment behavior.
+     *
+     * @return array{score: int, status: string, detail: string}
      */
     protected function assessPaymentBehavior(Company $company): array
     {
@@ -131,9 +141,11 @@ class ClientHealthService
         foreach ($paidInvoices as $invoice) {
             if ($invoice->payments->isNotEmpty()) {
                 $firstPayment = $invoice->payments->first();
-                $daysToPay = $invoice->due_date->diffInDays($firstPayment->payment_date, false);
-                $totalDaysToPay += $daysToPay;
-                $paidCount++;
+                if ($firstPayment && $invoice->due_date) {
+                    $daysToPay = $invoice->due_date->diffInDays($firstPayment->payment_date, false);
+                    $totalDaysToPay += $daysToPay;
+                    $paidCount++;
+                }
             }
         }
 
@@ -152,6 +164,8 @@ class ClientHealthService
 
     /**
      * Assess contract status.
+     *
+     * @return array{score: int, status: string, detail: string}
      */
     protected function assessContractStatus(Company $company): array
     {
@@ -181,6 +195,8 @@ class ClientHealthService
 
     /**
      * Assess engagement level.
+     *
+     * @return array{score: int, status: string, detail: string}
      */
     protected function assessEngagement(Company $company): array
     {
@@ -201,14 +217,16 @@ class ClientHealthService
 
     /**
      * Assess growth trend.
+     *
+     * @return array{score: int, status: string, detail: string}
      */
     protected function assessGrowth(Company $company): array
     {
-        $lastQuarter = Invoice::where('company_id', $company->id)
+        $lastQuarter = (float) Invoice::where('company_id', $company->id)
             ->where('issue_date', '>=', now()->subMonths(3))
             ->sum('total');
 
-        $previousQuarter = Invoice::where('company_id', $company->id)
+        $previousQuarter = (float) Invoice::where('company_id', $company->id)
             ->where('issue_date', '>=', now()->subMonths(6))
             ->where('issue_date', '<', now()->subMonths(3))
             ->sum('total');
@@ -242,6 +260,9 @@ class ClientHealthService
 
     /**
      * Get recommendations based on health factors.
+     *
+     * @param array<string, array{score: int, status: string, detail: string}> $factors
+     * @return array<int, string>
      */
     protected function getRecommendations(float $score, array $factors): array
     {

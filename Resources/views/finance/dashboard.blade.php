@@ -8,6 +8,8 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
+            @include('billing::finance._partials.nav')
+
             <!-- Metrics Row -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                 <!-- MRR Card -->
@@ -69,27 +71,95 @@
                         Predicted Churn: <span class="font-bold text-rose-600">{{ $churnRate }}%</span>
                     </div>
                 </div>
-                <div class="relative h-64">
-                    <!-- Simple Bar Chart using CSS Grid -->
-                    <div class="absolute inset-0 flex items-end justify-between space-x-2 px-4 pb-6">
+                <div class="relative h-64 w-full">
+                    @if(!empty($forecastData['forecast']))
                         @php
-                            $maxVal = max($forecastData['forecast']);
-                            $minVal = min($forecastData['forecast']);
-                            // Add some buffer
-                            $scale = $maxVal > 0 ? $maxVal * 1.1 : 100; 
+                            $forecast = $forecastData['forecast'];
+                            $values = array_values($forecast);
+                            $labels = array_keys($forecast);
+                            $count = count($values);
+                            $max = max($values);
+                            $min = min($values);
+                            
+                            // Add padding to min/max for better visualization
+                            $range = $max - $min;
+                            if ($range == 0) $range = $max ?: 100; 
+                            
+                            // Add 20% padding to top and bottom of range
+                            $minY = max(0, $min - ($range * 0.2));
+                            $maxY = $max + ($range * 0.2);
+                            $rangeY = $maxY - $minY;
+                            if ($rangeY == 0) $rangeY = 1;
+
+                            $width = 800;
+                            $height = 250;
+                            $paddingX = 60;
+                            $paddingY = 40;
+                            
+                            $points = [];
+                            $stepX = ($width - ($paddingX * 2)) / max(1, $count - 1);
+                            
+                            foreach ($values as $index => $value) {
+                                $x = $paddingX + ($index * $stepX);
+                                // Invert Y because SVG 0 is at top
+                                $y = $height - $paddingY - ((($value - $minY) / $rangeY) * ($height - ($paddingY * 2)));
+                                $points[] = ['x' => $x, 'y' => $y, 'value' => $value, 'label' => $labels[$index]];
+                            }
+                            
+                            $pathData = "";
+                            foreach ($points as $i => $point) {
+                                $pathData .= ($i === 0 ? "M" : "L") . " {$point['x']} {$point['y']} ";
+                            }
+                            
+                            // Area path (close the loop to the bottom)
+                            $areaPathData = $pathData . " L {$points[$count-1]['x']} " . ($height - $paddingY) . " L {$points[0]['x']} " . ($height - $paddingY) . " Z";
                         @endphp
-                        
-                        @foreach($forecastData['forecast'] as $month => $amount)
-                            <div class="flex flex-col items-center flex-1 group">
-                                <div class="w-full bg-indigo-100 rounded-t hover:bg-indigo-200 transition-all relative" style="height: {{ ($amount / $scale) * 100 }}%">
-                                    <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        ${{ number_format($amount, 2) }}
-                                    </div>
-                                </div>
-                                <div class="mt-2 text-xs text-gray-500">{{ $month }}</div>
+
+                        <svg viewBox="0 0 {{ $width }} {{ $height }}" class="w-full h-full overflow-visible" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#6366f1;stop-opacity:0.2" />
+                                    <stop offset="100%" style="stop-color:#6366f1;stop-opacity:0" />
+                                </linearGradient>
+                            </defs>
+
+                            <!-- Area under line -->
+                            <path d="{{ $areaPathData }}" fill="url(#gradient)" />
+
+                            <!-- Line -->
+                            <path d="{{ $pathData }}" fill="none" stroke="#6366f1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+
+                            <!-- Points and Labels -->
+                            @foreach($points as $point)
+                                <!-- Vertical Grid Line (optional, subtle) -->
+                                <line x1="{{ $point['x'] }}" y1="{{ $height - $paddingY }}" x2="{{ $point['x'] }}" y2="{{ $point['y'] }}" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="4 4" />
+
+                                <!-- Point -->
+                                <circle cx="{{ $point['x'] }}" cy="{{ $point['y'] }}" r="5" fill="#ffffff" stroke="#6366f1" stroke-width="2" />
+                                
+                                <!-- Value Label (Staggered if needed, but with enough width it should be fine) -->
+                                <text x="{{ $point['x'] }}" y="{{ $point['y'] - 15 }}" text-anchor="middle" font-size="14" font-weight="bold" fill="#374151" class="dark:fill-gray-200">
+                                    ${{ number_format($point['value'], 0) }}
+                                </text>
+                                
+                                <!-- Month Label -->
+                                <text x="{{ $point['x'] }}" y="{{ $height - 10 }}" text-anchor="middle" font-size="12" fill="#6b7280" class="dark:fill-gray-400">
+                                    {{ $point['label'] }}
+                                </text>
+                            @endforeach
+                        </svg>
+                    @else
+                        <!-- Empty State -->
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-center">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                <p class="mt-2 text-sm text-gray-500">No forecast data available</p>
+                                <p class="text-xs text-gray-400">Add subscriptions or invoices to generate forecast</p>
                             </div>
-                        @endforeach
-                    </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 

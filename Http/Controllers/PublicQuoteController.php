@@ -102,8 +102,97 @@ class PublicQuoteController extends Controller
 
     public function show($token)
     {
-        $quote = Quote::where('token', $token)->with('lineItems')->firstOrFail();
+        $quote = Quote::where('token', $token)->with(['lineItems', 'company'])->firstOrFail();
+        
+        // Track view
+        if (!$quote->viewed_at) {
+            $quote->update(['viewed_at' => now()]);
+            
+            // Log activity
+            \Modules\Billing\Models\BillingLog::create([
+                'company_id' => $quote->company_id,
+                'event' => 'quote.viewed',
+                'description' => "Quote #{$quote->quote_number} viewed by client",
+                'payload' => ['quote_id' => $quote->id, 'ip' => request()->ip()],
+                'level' => 'info'
+            ]);
+        }
+        
+        return view('billing::public.quote-accept', compact('quote'));
+    }
 
-        return view('billing::public.quote-show', compact('quote'));
+    public function accept(Request $request, $token)
+    {
+        $request->validate([
+            'terms_accepted' => 'required|accepted',
+            'accepted_by_name' => 'required|string|max:255',
+            'accepted_by_email' => 'required|email|max:255',
+            'notes' => 'nullable|string',
+        ]);
+
+        $quote = Quote::where('token', $token)->firstOrFail();
+
+        // Verify quote is still valid
+        if ($quote->is_accepted) {
+            return redirect()->back()->with('error', 'This quote has already been accepted.');
+        }
+
+        if ($quote->valid_until < now()) {
+            return redirect()->back()->with('error', 'This quote has expired.');
+        }
+
+        // Accept the quote
+        $quote->update([
+            'accepted_at' => now(),
+            'accepted_by_name' => $request->accepted_by_name,
+            'accepted_by_email' => $request->accepted_by_email,
+            'status' => 'accepted',
+            'notes' => $quote->notes . ($request->notes ? "\n\nAcceptance Note: " . $request->notes : ''),
+        ]);
+
+        // Log activity
+        \Modules\Billing\Models\BillingLog::create([
+            'company_id' => $quote->company_id,
+            'event' => 'quote.accepted',
+            'description' => "Quote #{$quote->quote_number} accepted by {$request->accepted_by_name}",
+            'payload' => ['quote_id' => $quote->id, 'accepted_by' => $request->accepted_by_email],
+            'level' => 'info'
+        ]);
+
+        // TODO: Notify sales/finance that quote was accepted
+        // TODO: Trigger quote conversion to invoice/subscription workflow
+
+        return view('billing::public.quote-accepted', compact('quote'));
+    }
+
+    public function reject(Request $request, $token)
+    {
+        $request->validate([
+            'rejected_by_name' => 'required|string|max:255',
+            'rejected_by_email' => 'required|email|max:255',
+            'rejection_reason' => 'required|string',
+        ]);
+
+        $quote = Quote::where('token', $token)->firstOrFail();
+
+        if ($quote->status !== 'draft' && $quote->status !== 'sent') {
+             return redirect()->back()->with('error', 'Cannot reject this quote.');
+        }
+
+        $quote->update([
+            'status' => 'rejected',
+            'notes' => $quote->notes . "\n\nRejection Reason: " . $request->rejection_reason . " (by {$request->rejected_by_name})",
+        ]);
+
+        // Log activity
+        \Modules\Billing\Models\BillingLog::create([
+            'company_id' => $quote->company_id,
+            'event' => 'quote.rejected',
+            'description' => "Quote #{$quote->quote_number} rejected by {$request->rejected_by_name}",
+            'payload' => ['quote_id' => $quote->id, 'reason' => $request->rejection_reason],
+            'level' => 'warning'
+        ]);
+
+        return view('billing::public.quote-rejected', compact('quote'));
     }
 }

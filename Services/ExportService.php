@@ -12,6 +12,10 @@ class ExportService
 {
     /**
      * Export data to Excel/CSV based on report type.
+     *
+     * @param string $reportType
+     * @param array<string, mixed> $filters
+     * @return string
      */
     public function exportToExcel(string $reportType, array $filters = []): string
     {
@@ -42,6 +46,9 @@ class ExportService
 
     /**
      * Export multiple invoices as PDFs in a ZIP file.
+     *
+     * @param array<int> $invoiceIds
+     * @return string
      */
     public function exportInvoicesToPdf(array $invoiceIds): string
     {
@@ -72,6 +79,9 @@ class ExportService
 
     /**
      * Export AR aging report.
+     *
+     * @param array<string, mixed> $filters
+     * @return string
      */
     public function exportArAging(array $filters = []): string
     {
@@ -96,7 +106,7 @@ class ExportService
 
         foreach ($invoices as $invoice) {
             $balance = $invoice->total - $invoice->paid_amount;
-            $daysOverdue = $invoice->due_date->isPast() ? now()->diffInDays($invoice->due_date) : 0;
+            $daysOverdue = $invoice->due_date->isPast() ? (int) now()->diffInDays($invoice->due_date) : 0;
             $agingBucket = $this->getAgingBucket($daysOverdue);
 
             $csv->insertOne([
@@ -154,6 +164,9 @@ class ExportService
 
     /**
      * Export invoices list.
+     *
+     * @param array<string, mixed> $filters
+     * @return string
      */
     protected function exportInvoices(array $filters): string
     {
@@ -210,6 +223,9 @@ class ExportService
 
     /**
      * Export payments list.
+     *
+     * @param array<string, mixed> $filters
+     * @return string
      */
     protected function exportPayments(array $filters): string
     {
@@ -231,6 +247,9 @@ class ExportService
 
     /**
      * Export subscriptions list.
+     *
+     * @param array<string, mixed> $filters
+     * @return string
      */
     protected function exportSubscriptions(array $filters): string
     {

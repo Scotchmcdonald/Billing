@@ -13,6 +13,9 @@ class AuditService
 {
     /**
      * Log an audit event for a model.
+     *
+     * @param array<string, mixed>|null $oldValues
+     * @param array<string, mixed>|null $newValues
      */
     public function log(
         Model $auditable,
@@ -23,9 +26,11 @@ class AuditService
     ): BillingAuditLog {
         $user = $user ?? Auth::user();
 
+        $key = $auditable->getKey();
+
         $log = BillingAuditLog::create([
             'auditable_type' => get_class($auditable),
-            'auditable_id' => $auditable->id,
+            'auditable_id' => is_numeric($key) ? (int) $key : 0,
             'event' => $event,
             'old_values' => $oldValues,
             'new_values' => $newValues,
@@ -38,6 +43,8 @@ class AuditService
 
     /**
      * Get audit logs for a specific entity.
+     *
+     * @return Collection<int, BillingAuditLog>
      */
     public function getLogsForEntity(string $type, int $id): Collection
     {
@@ -50,6 +57,8 @@ class AuditService
 
     /**
      * Get audit logs for a specific user.
+     *
+     * @return Collection<int, BillingAuditLog>
      */
     public function getLogsForUser(User $user, ?Carbon $since = null): Collection
     {
@@ -65,6 +74,8 @@ class AuditService
 
     /**
      * Get recent activity across all entities.
+     *
+     * @return Collection<int, BillingAuditLog>
      */
     public function getRecentActivity(int $limit = 50): Collection
     {
@@ -76,6 +87,8 @@ class AuditService
 
     /**
      * Get audit logs filtered by event type.
+     *
+     * @return Collection<int, BillingAuditLog>
      */
     public function getLogsByEvent(string $event, ?int $limit = null): Collection
     {
@@ -92,10 +105,13 @@ class AuditService
 
     /**
      * Get audit logs for a specific model instance.
+     *
+     * @return Collection<int, BillingAuditLog>
      */
     public function getLogsForModel(Model $model): Collection
     {
-        return $this->getLogsForEntity(get_class($model), $model->id);
+        $key = $model->getKey();
+        return $this->getLogsForEntity(get_class($model), is_numeric($key) ? (int) $key : 0);
     }
 
     /**
@@ -114,6 +130,8 @@ class AuditService
 
     /**
      * Log a model update event.
+     *
+     * @param array{old?: array<string, mixed>, new?: array<string, mixed>} $changes
      */
     public function logUpdated(Model $model, array $changes, ?User $user = null): BillingAuditLog
     {
@@ -160,14 +178,19 @@ class AuditService
 
     /**
      * Get audit trail summary for an entity (grouped by event type).
+     *
+     * @return array{total_events: int, events_by_type: array<string, int>, first_event: Carbon|null, last_event: Carbon|null, unique_users: int}
      */
     public function getAuditSummary(string $type, int $id): array
     {
         $logs = $this->getLogsForEntity($type, $id);
 
+        /** @var array<string, int> $eventsByType */
+        $eventsByType = $logs->groupBy('event')->map->count()->toArray();
+
         return [
             'total_events' => $logs->count(),
-            'events_by_type' => $logs->groupBy('event')->map->count()->toArray(),
+            'events_by_type' => $eventsByType,
             'first_event' => $logs->last()?->created_at,
             'last_event' => $logs->first()?->created_at,
             'unique_users' => $logs->pluck('user_id')->unique()->count(),

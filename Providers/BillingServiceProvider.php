@@ -29,6 +29,7 @@ class BillingServiceProvider extends ServiceProvider
             $this->commands([
                 \Modules\Billing\Console\SyncCrmCompaniesCommand::class,
                 \Modules\Billing\Console\GenerateMonthlyInvoices::class,
+                \Modules\Billing\Console\CleanDemoDataCommand::class,
             ]);
         }
 
@@ -43,6 +44,33 @@ class BillingServiceProvider extends ServiceProvider
             \Modules\Billing\Events\QuoteApproved::class,
             \Modules\Billing\Listeners\ProvisionQuote::class
         );
+
+        // View Composer for Finance Navigation
+        \Illuminate\Support\Facades\View::composer('billing::finance._partials.nav', function ($view) {
+            try {
+                // Usage Reviews
+                $pendingUsage = \Modules\Billing\Models\UsageChange::where('status', 'pending')->count();
+                
+                // Pre-flight (Placeholder matching controller logic)
+                $pendingPreFlight = 12; 
+                
+                // Overdue Invoices
+                $overdueInvoices = \Modules\Billing\Models\Invoice::where('status', 'overdue')->count();
+                
+                // Failed Payments
+                $failedPayments = \Modules\Billing\Models\Payment::where('status', 'failed')->where('created_at', '>=', now()->subDays(30))->count();
+
+                $view->with('navCounts', [
+                    'usage_review' => $pendingUsage,
+                    'pre_flight' => $pendingPreFlight,
+                    'invoices' => $overdueInvoices,
+                    'payments' => $failedPayments
+                ]);
+            } catch (\Exception $e) {
+                // Fail gracefully if tables don't exist yet
+                $view->with('navCounts', []);
+            }
+        });
     }
 
     public function register()

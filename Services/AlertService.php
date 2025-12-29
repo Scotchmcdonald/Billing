@@ -12,6 +12,8 @@ class AlertService
 {
     /**
      * Check all thresholds and return triggered alerts.
+     *
+     * @return array<int, array<string, mixed>>
      */
     public function checkThresholds(): array
     {
@@ -88,6 +90,8 @@ class AlertService
 
     /**
      * Get threshold configuration.
+     *
+     * @return array<string, array{enabled: bool, threshold: float}>
      */
     public function getThresholdConfig(): array
     {
@@ -135,6 +139,9 @@ class AlertService
 
     /**
      * Send an alert through configured channels.
+     *
+     * @param string $alertType
+     * @param array<string, mixed> $data
      */
     public function sendAlert(string $alertType, array $data): void
     {
@@ -175,7 +182,7 @@ class AlertService
      */
     protected function calculateArTotal(): float
     {
-        return Invoice::whereIn('status', ['sent', 'overdue'])
+        return (float) Invoice::whereIn('status', ['sent', 'overdue'])
             ->sum('total');
     }
 
@@ -184,12 +191,12 @@ class AlertService
      */
     protected function calculateMrrChange(): float
     {
-        $currentMrr = Subscription::where('is_active', true)
+        $currentMrr = (float) Subscription::where('is_active', true)
             ->where('billing_frequency', 'monthly')
             ->sum('effective_price');
 
         // Get last month's MRR from cache or calculate
-        $lastMonthMrr = Cache::get('billing_mrr_last_month', $currentMrr);
+        $lastMonthMrr = (float) Cache::get('billing_mrr_last_month', $currentMrr);
 
         if ($lastMonthMrr == 0) {
             return 0.0;
@@ -205,6 +212,9 @@ class AlertService
 
     /**
      * Get companies with margins below threshold.
+     *
+     * @param float $threshold
+     * @return \Illuminate\Database\Eloquent\Collection<int, Company>
      */
     protected function getLowMarginClients(float $threshold)
     {

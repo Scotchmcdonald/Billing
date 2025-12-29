@@ -96,22 +96,9 @@
 
         <!-- Charts Row -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <!-- Revenue Trend -->
-            <div class="bg-white shadow-sm rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Revenue Trend (Last 12 Months)</h3>
-                <div class="h-64 flex items-end justify-between space-x-2">
-                    @foreach($metrics['revenue_trend'] as $month => $amount)
-                        <div class="flex-1 flex flex-col items-center">
-                            <div class="w-full bg-primary-600 rounded-t" style="height: {{ ($amount / max($metrics['revenue_trend'])) * 100 }}%"></div>
-                            <span class="text-xs text-gray-500 mt-2">{{ $month }}</span>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
             <!-- Top Clients by Revenue -->
             <div class="bg-white shadow-sm rounded-lg p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Top 10 Clients by Revenue</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Top 10 Clients by Revenue (All Time)</h3>
                 <div class="space-y-3">
                     @foreach($metrics['top_clients'] as $client)
                         <div class="flex items-center justify-between">
@@ -124,6 +111,19 @@
                             <span class="ml-4 text-sm font-semibold text-gray-900">
                                 ${{ number_format($client['revenue'] / 100, 0) }}
                             </span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Revenue Trend -->
+            <div class="bg-white shadow-sm rounded-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Revenue Trend (Last 12 Months)</h3>
+                <div class="h-64 flex items-end justify-between space-x-2">
+                    @foreach($metrics['revenue_trend'] as $month => $amount)
+                        <div class="flex-1 flex flex-col items-center">
+                            <div class="w-full bg-primary-600 rounded-t" style="height: {{ ($amount / max($metrics['revenue_trend'])) * 100 }}%"></div>
+                            <span class="text-xs text-gray-500 mt-2">{{ $month }}</span>
                         </div>
                     @endforeach
                 </div>

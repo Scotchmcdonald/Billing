@@ -15,12 +15,19 @@ class SlackService
 
     public function __construct()
     {
-        $this->webhookUrl = config('services.slack.webhook_url', '');
-        $this->channel = config('services.slack.channel', '#billing');
+        /** @var string $webhookUrl */
+        $webhookUrl = config('services.slack.webhook_url', '');
+        $this->webhookUrl = $webhookUrl;
+
+        /** @var string $channel */
+        $channel = config('services.slack.channel', '#billing');
+        $this->channel = $channel;
     }
 
     /**
      * Send a notification to Slack.
+     * 
+     * @param array<int, mixed> $blocks
      */
     public function sendNotification(string $channel, string $message, array $blocks = []): bool
     {

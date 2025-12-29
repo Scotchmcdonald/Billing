@@ -97,8 +97,7 @@ class ExecutiveDashboardController extends Controller
     {
         $clients = \Modules\Billing\Models\Company::query()
             ->withSum(['invoices as total_revenue' => function ($query) {
-                $query->where('status', 'paid')
-                      ->where('created_at', '>=', now()->subYear());
+                $query->where('status', 'paid');
             }], 'total')
             ->orderByDesc('total_revenue')
             ->limit($limit)

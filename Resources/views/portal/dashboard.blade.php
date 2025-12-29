@@ -52,6 +52,16 @@
                         class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm focus:outline-none transition-colors duration-150">
                         My Services
                     </button>
+                    <button @click="activeTab = 'quotes'" 
+                        :class="activeTab === 'quotes' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm focus:outline-none transition-colors duration-150">
+                        Quotes
+                        @if($quotes->where('status', 'sent')->count() > 0)
+                            <span class="ml-2 bg-red-100 text-red-600 py-0.5 px-2 rounded-full text-xs font-bold border border-red-200">
+                                {{ $quotes->where('status', 'sent')->count() }}
+                            </span>
+                        @endif
+                    </button>
                     <button @click="activeTab = 'history'" 
                         :class="activeTab === 'history' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
                         class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm focus:outline-none transition-colors duration-150">
@@ -63,6 +73,47 @@
                         Payment Methods
                     </button>
                 </nav>
+            </div>
+
+            <!-- Quotes Tab -->
+            <div x-show="activeTab === 'quotes'" class="bg-white shadow overflow-hidden sm:rounded-md">
+                <ul class="divide-y divide-gray-200">
+                    @forelse($quotes as $quote)
+                    <li>
+                        <a href="{{ route('billing.portal.quotes.show', ['company' => $company->id, 'id' => $quote->id]) }}" class="block hover:bg-gray-50">
+                            <div class="px-4 py-4 sm:px-6">
+                                <div class="flex items-center justify-between">
+                                    <p class="text-sm font-medium text-indigo-600 truncate">
+                                        Quote #{{ $quote->quote_number }}
+                                    </p>
+                                    <div class="ml-2 flex-shrink-0 flex">
+                                        <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                            {{ $quote->status === 'sent' ? 'bg-blue-100 text-blue-800' : '' }}
+                                            {{ $quote->status === 'accepted' ? 'bg-green-100 text-green-800' : '' }}
+                                            {{ $quote->status === 'rejected' ? 'bg-red-100 text-red-800' : '' }}">
+                                            {{ ucfirst($quote->status) }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="mt-2 sm:flex sm:justify-between">
+                                    <div class="sm:flex">
+                                        <p class="flex items-center text-sm text-gray-500">
+                                            Total: ${{ number_format($quote->total, 2) }}
+                                        </p>
+                                    </div>
+                                    <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                        <p>
+                                            Valid Until: {{ $quote->valid_until ? $quote->valid_until->format('M d, Y') : 'N/A' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                    @empty
+                    <li class="px-4 py-4 sm:px-6 text-gray-500 text-sm">No quotes found.</li>
+                    @endforelse
+                </ul>
             </div>
 
             <!-- My Services Tab -->
@@ -154,7 +205,7 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="#" class="text-gray-400 cursor-not-allowed mr-3" title="PDF Download Not Available">View PDF</a>
+                                <a href="{{ route('billing.portal.invoice.pdf', ['company' => $company->id, 'invoice' => $invoice->id]) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">View PDF</a>
                                 @if($invoice->status == 'sent' || $invoice->status == 'open')
                                 <button @click="openPayModal({ id: '{{ $invoice->id }}', number: '{{ $invoice->invoice_number }}', total: {{ $invoice->total }} })" class="text-emerald-600 hover:text-emerald-900">Pay Now</button>
                                 @endif

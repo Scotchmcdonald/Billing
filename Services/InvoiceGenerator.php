@@ -21,7 +21,7 @@ class InvoiceGenerator
      * @param Company $company
      * @param string $sku
      * @param int $quantity
-     * @return array
+     * @return array{product_id: int, sku: string, description: string, unit_price: float, quantity: int, total: float}
      */
     public function generateLineItem(Company $company, string $sku, int $quantity = 1): array
     {

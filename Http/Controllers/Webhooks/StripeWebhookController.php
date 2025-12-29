@@ -47,10 +47,17 @@ class StripeWebhookController extends Controller
         return response()->json(['status' => 'success']);
     }
 
-    protected function handlePaymentSucceeded($data)
+    /**
+     * Handle payment succeeded.
+     *
+     * @param array<string, mixed> $data
+     * @return void
+     */
+    protected function handlePaymentSucceeded(array $data): void
     {
-        $stripeInvoiceId = $data['id'];
-        $amountPaid = ($data['amount_paid'] ?? 0) / 100; // Stripe is in cents
+        $stripeInvoiceId = isset($data['id']) && is_string($data['id']) ? $data['id'] : '';
+        $amount = $data['amount_paid'] ?? 0;
+        $amountPaid = (is_numeric($amount) ? (float) $amount : 0.0) / 100; // Stripe is in cents
 
         $invoice = Invoice::where('stripe_invoice_id', $stripeInvoiceId)->first();
 
@@ -60,13 +67,16 @@ class StripeWebhookController extends Controller
                 'paid_amount' => $invoice->paid_amount + $amountPaid,
             ]);
 
+            $paymentIntent = $data['payment_intent'] ?? null;
+            $paymentReference = is_string($paymentIntent) ? $paymentIntent : $stripeInvoiceId;
+
             // Record Payment
             Payment::create([
                 'invoice_id' => $invoice->id,
                 'company_id' => $invoice->company_id,
                 'amount' => $amountPaid,
                 'payment_method' => 'stripe_card', // Simplified, could be derived from charge
-                'payment_reference' => $data['payment_intent'] ?? $stripeInvoiceId,
+                'payment_reference' => $paymentReference,
                 'payment_date' => now(),
                 'created_by' => 1, // System user ID
                 'notes' => 'Auto-recorded via Stripe Webhook',
@@ -78,9 +88,15 @@ class StripeWebhookController extends Controller
         }
     }
 
-    protected function handlePaymentFailed($data)
+    /**
+     * Handle payment failed.
+     *
+     * @param array<string, mixed> $data
+     * @return void
+     */
+    protected function handlePaymentFailed(array $data): void
     {
-        $stripeInvoiceId = $data['id'];
+        $stripeInvoiceId = isset($data['id']) && is_string($data['id']) ? $data['id'] : '';
         $invoice = Invoice::where('stripe_invoice_id', $stripeInvoiceId)->first();
 
         if ($invoice) {

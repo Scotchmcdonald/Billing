@@ -18,7 +18,7 @@ class RetainerController extends Controller
     /**
      * Display a listing of retainers.
      */
-    public function index(Request $request)
+    public function index(Request $request): \Illuminate\View\View
     {
         $query = Retainer::with('company');
 
@@ -55,7 +55,7 @@ class RetainerController extends Controller
     /**
      * Show the form for creating a new retainer.
      */
-    public function create()
+    public function create(): \Illuminate\View\View
     {
         $companies = Company::where('is_active', true)->orderBy('name')->get();
         
@@ -65,7 +65,7 @@ class RetainerController extends Controller
     /**
      * Store a newly created retainer.
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $request->validate([
             'company_id' => 'required|exists:companies,id',
@@ -75,13 +75,14 @@ class RetainerController extends Controller
         ]);
 
         try {
-            $company = Company::findOrFail($request->company_id);
-            $expiresAt = $request->expires_at ? Carbon::parse($request->expires_at) : null;
+            /** @var Company $company */
+            $company = Company::findOrFail($request->integer('company_id'));
+            $expiresAt = $request->input('expires_at') ? Carbon::parse($request->string('expires_at')) : null;
 
             $retainer = $this->retainerService->purchaseRetainer(
                 $company,
-                $request->hours,
-                (int) ($request->price * 100), // Convert to cents
+                $request->float('hours'),
+                (int) ($request->float('price') * 100), // Convert to cents
                 $expiresAt
             );
 
@@ -98,7 +99,7 @@ class RetainerController extends Controller
     /**
      * Display the specified retainer.
      */
-    public function show(Retainer $retainer)
+    public function show(Retainer $retainer): \Illuminate\View\View
     {
         $retainer->load(['company']);
         
@@ -115,7 +116,7 @@ class RetainerController extends Controller
     /**
      * Show form to add hours to a retainer.
      */
-    public function addHours(Retainer $retainer)
+    public function addHours(Retainer $retainer): \Illuminate\View\View
     {
         return view('billing::finance.retainers.add-hours', compact('retainer'));
     }
@@ -123,7 +124,7 @@ class RetainerController extends Controller
     /**
      * Add hours to an existing retainer.
      */
-    public function storeHours(Request $request, Retainer $retainer)
+    public function storeHours(Request $request, Retainer $retainer): \Illuminate\Http\RedirectResponse
     {
         $request->validate([
             'hours' => 'required|numeric|min:1',
@@ -132,8 +133,8 @@ class RetainerController extends Controller
 
         try {
             // Add hours to existing retainer
-            $newHours = $retainer->hours_purchased + $request->hours;
-            $newRemaining = $retainer->hours_remaining + $request->hours;
+            $newHours = $retainer->hours_purchased + $request->float('hours');
+            $newRemaining = $retainer->hours_remaining + $request->float('hours');
 
             $retainer->update([
                 'hours_purchased' => $newHours,
@@ -154,7 +155,7 @@ class RetainerController extends Controller
     /**
      * Expire overdue retainers (can be called manually or via scheduled job).
      */
-    public function expireOverdue()
+    public function expireOverdue(): \Illuminate\Http\RedirectResponse
     {
         $count = $this->retainerService->expireOverdueRetainers();
 
@@ -164,7 +165,7 @@ class RetainerController extends Controller
     /**
      * Get retainer data for a company (API endpoint for portal).
      */
-    public function forCompany(Company $company)
+    public function forCompany(Company $company): \Illuminate\Http\JsonResponse
     {
         $activeRetainer = $this->retainerService->getActiveRetainer($company);
         $allRetainers = $this->retainerService->getRetainers($company);

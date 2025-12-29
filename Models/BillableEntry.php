@@ -8,6 +8,32 @@ use Modules\Billing\Models\Company;
 use App\Models\User;
 use Modules\Billing\Models\InvoiceLineItem;
 
+/**
+ * @property int $id
+ * @property int $company_id
+ * @property int|null $user_id
+ * @property int|null $invoice_line_item_id
+ * @property int|null $subscription_id
+ * @property string $description
+ * @property float $quantity
+ * @property float $rate
+ * @property float $subtotal
+ * @property bool $is_billable
+ * @property string $type
+ * @property \Illuminate\Support\Carbon $date
+ * @property array $metadata
+ * @property float $amount
+ * @property string $billing_status
+ * @property \Illuminate\Support\Carbon|null $status_changed_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * 
+ * @property-read Company $company
+ * @property-read User|null $user
+ * @property-read InvoiceLineItem|null $invoiceLineItem
+ * 
+ * @method static \Illuminate\Database\Eloquent\Builder|BillableEntry unbilled()
+ */
 class BillableEntry extends Model
 {
     use HasFactory;
@@ -28,17 +54,17 @@ class BillableEntry extends Model
         'metadata' => 'array',
     ];
 
-    public function company()
+    public function company(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Company::class);
     }
 
-    public function user()
+    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function invoiceLineItem()
+    public function invoiceLineItem(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(InvoiceLineItem::class);
     }
