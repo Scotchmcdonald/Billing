@@ -14,15 +14,32 @@ return new class extends Migration
         if (!Schema::hasTable('quotes')) {
             Schema::create('quotes', function (Blueprint $table) {
                 $table->id();
-                $table->unsignedBigInteger('company_id');
-                $table->string('quote_number')->unique();
+                $table->unsignedBigInteger('company_id')->nullable(); // Nullable for prospects
+                $table->string('quote_number')->unique()->nullable(); // Nullable if generated later
                 $table->string('title')->nullable();
+                
+                // Prospect info
+                $table->string('prospect_name')->nullable();
+                $table->string('prospect_email')->nullable();
+                
                 $table->decimal('subtotal', 15, 2)->default(0);
                 $table->decimal('tax_total', 15, 2)->default(0);
                 $table->decimal('total', 15, 2)->default(0);
                 $table->string('status')->default('draft'); // draft, sent, accepted, rejected
-                $table->string('public_token')->nullable()->unique();
                 
+                // Tokens
+                $table->string('public_token')->nullable()->unique();
+                $table->string('token')->nullable()->unique(); // Alias or alternative
+                
+                $table->date('valid_until')->nullable();
+                $table->text('notes')->nullable();
+                
+                // Enhanced Fields
+                $table->string('pricing_tier')->default('standard');
+                $table->boolean('requires_approval')->default(false);
+                $table->decimal('approval_threshold_percent', 5, 2)->default(15.00);
+                $table->string('billing_frequency')->default('monthly'); // monthly, annually
+
                 // Tracking fields
                 $table->timestamp('viewed_at')->nullable();
                 $table->string('viewed_ip')->nullable();
@@ -32,12 +49,38 @@ return new class extends Migration
                 $table->string('signer_email')->nullable();
                 
                 $table->timestamps();
-                $table->foreign('company_id')->references('id')->on('companies')->cascadeOnDelete();
+                
+                // FK
+                $table->foreign('company_id')->references('id')->on('companies')->nullOnDelete();
             });
         } else {
             Schema::table('quotes', function (Blueprint $table) {
                 if (!Schema::hasColumn('quotes', 'public_token')) {
                     $table->string('public_token')->nullable()->unique();
+                }
+                if (!Schema::hasColumn('quotes', 'prospect_name')) {
+                    $table->string('prospect_name')->nullable();
+                }
+                if (!Schema::hasColumn('quotes', 'prospect_email')) {
+                    $table->string('prospect_email')->nullable();
+                }
+                if (!Schema::hasColumn('quotes', 'valid_until')) {
+                    $table->date('valid_until')->nullable();
+                }
+                if (!Schema::hasColumn('quotes', 'notes')) {
+                    $table->text('notes')->nullable();
+                }
+                if (!Schema::hasColumn('quotes', 'pricing_tier')) {
+                    $table->string('pricing_tier')->default('standard');
+                }
+                if (!Schema::hasColumn('quotes', 'requires_approval')) {
+                    $table->boolean('requires_approval')->default(false);
+                }
+                if (!Schema::hasColumn('quotes', 'approval_threshold_percent')) {
+                    $table->decimal('approval_threshold_percent', 5, 2)->default(15.00);
+                }
+                if (!Schema::hasColumn('quotes', 'billing_frequency')) {
+                    $table->string('billing_frequency')->default('monthly');
                 }
                 if (!Schema::hasColumn('quotes', 'viewed_at')) {
                     $table->timestamp('viewed_at')->nullable();
@@ -60,7 +103,47 @@ return new class extends Migration
             });
         }
 
-        // 2. Invoices
+        // 2. Quote Line Items
+        if (!Schema::hasTable('quote_line_items')) {
+            Schema::create('quote_line_items', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('quote_id')->constrained()->cascadeOnDelete();
+                $table->unsignedBigInteger('product_id')->nullable(); // Nullable if custom item
+                $table->string('description');
+                $table->integer('quantity')->default(1);
+                $table->decimal('unit_price', 10, 2);
+                $table->decimal('subtotal', 10, 2);
+                
+                // Enhanced Fields
+                $table->decimal('unit_price_monthly', 10, 2)->nullable();
+                $table->decimal('unit_price_annually', 10, 2)->nullable();
+                $table->decimal('standard_price', 10, 2)->nullable();
+                $table->decimal('variance_amount', 10, 2)->default(0);
+                $table->decimal('variance_percent', 5, 2)->default(0);
+                
+                $table->timestamps();
+            });
+        } else {
+            Schema::table('quote_line_items', function (Blueprint $table) {
+                if (!Schema::hasColumn('quote_line_items', 'unit_price_monthly')) {
+                    $table->decimal('unit_price_monthly', 10, 2)->nullable();
+                }
+                if (!Schema::hasColumn('quote_line_items', 'unit_price_annually')) {
+                    $table->decimal('unit_price_annually', 10, 2)->nullable();
+                }
+                if (!Schema::hasColumn('quote_line_items', 'standard_price')) {
+                    $table->decimal('standard_price', 10, 2)->nullable();
+                }
+                if (!Schema::hasColumn('quote_line_items', 'variance_amount')) {
+                    $table->decimal('variance_amount', 10, 2)->default(0);
+                }
+                if (!Schema::hasColumn('quote_line_items', 'variance_percent')) {
+                    $table->decimal('variance_percent', 5, 2)->default(0);
+                }
+            });
+        }
+
+        // 3. Invoices
         if (!Schema::hasTable('invoices')) {
             Schema::create('invoices', function (Blueprint $table) {
                 $table->id();
@@ -71,9 +154,16 @@ return new class extends Migration
                 $table->decimal('subtotal', 15, 4);
                 $table->decimal('tax_total', 15, 4)->default(0);
                 $table->decimal('total', 15, 4);
+                $table->decimal('paid_amount', 15, 4)->default(0);
+                $table->string('currency')->default('USD');
                 $table->enum('status', ['draft', 'pending_review', 'sent', 'paid', 'overdue', 'void'])->default('draft');
                 $table->text('notes')->nullable();
                 $table->text('internal_notes')->nullable();
+                
+                // Integrations
+                $table->string('xero_invoice_id')->nullable();
+                $table->string('stripe_invoice_id')->nullable();
+                $table->json('metadata')->nullable();
                 
                 // Revenue Recognition
                 $table->string('revenue_recognition_method')->default('cash'); // cash, accrual
@@ -140,15 +230,25 @@ return new class extends Migration
                 if (!Schema::hasColumn('invoices', 'internal_notes')) {
                     $table->text('internal_notes')->nullable();
                 }
-                
-                // Add indexes if they don't exist (checking index existence is tricky in Laravel migration without raw SQL or try/catch, but we can try adding them and ignore if exists or check via Schema manager if available, but Schema::hasIndex is not standard in all versions. 
-                // Actually Schema::hasIndex exists in newer Laravel.
-                // Assuming Laravel 8+
-                // $table->index(['company_id', 'status'], 'invoices_company_status_idx');
+                if (!Schema::hasColumn('invoices', 'paid_amount')) {
+                    $table->decimal('paid_amount', 15, 4)->default(0);
+                }
+                if (!Schema::hasColumn('invoices', 'currency')) {
+                    $table->string('currency')->default('USD');
+                }
+                if (!Schema::hasColumn('invoices', 'xero_invoice_id')) {
+                    $table->string('xero_invoice_id')->nullable();
+                }
+                if (!Schema::hasColumn('invoices', 'stripe_invoice_id')) {
+                    $table->string('stripe_invoice_id')->nullable();
+                }
+                if (!Schema::hasColumn('invoices', 'metadata')) {
+                    $table->json('metadata')->nullable();
+                }
             });
         }
 
-        // 3. Invoice Line Items
+        // 4. Invoice Line Items
         if (!Schema::hasTable('invoice_line_items')) {
             Schema::create('invoice_line_items', function (Blueprint $table) {
                 $table->id();
@@ -159,6 +259,7 @@ return new class extends Migration
                 $table->decimal('unit_price', 15, 4);
                 $table->decimal('subtotal', 15, 4);
                 $table->decimal('tax_amount', 15, 4)->default(0);
+                $table->decimal('tax_credit_amount', 15, 4)->default(0); // Added from non-profit fields
                 $table->boolean('is_fee')->default(false); // Flag for CC convenience fees
                 
                 // Service Period
@@ -177,10 +278,13 @@ return new class extends Migration
                 if (!Schema::hasColumn('invoice_line_items', 'service_period_end')) {
                     $table->date('service_period_end')->nullable();
                 }
+                if (!Schema::hasColumn('invoice_line_items', 'tax_credit_amount')) {
+                    $table->decimal('tax_credit_amount', 15, 4)->default(0);
+                }
             });
         }
 
-        // 4. Payments
+        // 5. Payments
         if (!Schema::hasTable('payments')) {
             Schema::create('payments', function (Blueprint $table) {
                 $table->id();
@@ -202,7 +306,7 @@ return new class extends Migration
             });
         }
 
-        // 5. Credit Notes
+        // 6. Credit Notes
         if (!Schema::hasTable('credit_notes')) {
             Schema::create('credit_notes', function (Blueprint $table) {
                 $table->id();
@@ -221,7 +325,7 @@ return new class extends Migration
             });
         }
 
-        // 6. Retainers
+        // 7. Retainers
         if (!Schema::hasTable('retainers')) {
             Schema::create('retainers', function (Blueprint $table) {
                 $table->id();
@@ -239,7 +343,7 @@ return new class extends Migration
             });
         }
 
-        // 7. Billable Entries
+        // 8. Billable Entries
         if (!Schema::hasTable('billable_entries')) {
             Schema::create('billable_entries', function (Blueprint $table) {
                 $table->id();
@@ -330,6 +434,7 @@ return new class extends Migration
         Schema::dropIfExists('payments');
         Schema::dropIfExists('invoice_line_items');
         Schema::dropIfExists('invoices');
+        Schema::dropIfExists('quote_line_items');
         Schema::dropIfExists('quotes');
     }
 };

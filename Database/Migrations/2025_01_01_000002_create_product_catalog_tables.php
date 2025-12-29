@@ -22,8 +22,23 @@ return new class extends Migration
                 $table->decimal('base_price', 10, 2)->default(0);
                 $table->decimal('cost_price', 10, 2)->default(0);
                 $table->string('gl_account')->nullable();
+                $table->string('gl_account_code')->nullable();
                 $table->boolean('is_active')->default(true);
                 $table->string('stripe_product_id')->nullable()->index();
+                
+                // Enhanced Fields
+                $table->string('pricing_model')->default('flat_fee');
+                $table->string('unit_of_measure')->nullable();
+                $table->string('billing_frequency')->nullable();
+                $table->integer('min_quantity')->default(1);
+                $table->integer('included_quantity')->default(0);
+                $table->decimal('additional_unit_price', 10, 2)->nullable();
+                $table->decimal('floor_unit_price', 10, 2)->nullable();
+                $table->decimal('min_margin_percent', 5, 2)->default(0);
+                $table->string('tax_code')->nullable();
+                $table->boolean('is_addon')->default(false);
+                $table->unsignedBigInteger('parent_product_id')->nullable();
+
                 $table->timestamps();
             });
         } else {
@@ -37,6 +52,42 @@ return new class extends Migration
                 }
                 if (!Schema::hasColumn('products', 'cost_price')) {
                     $table->decimal('cost_price', 10, 2)->default(0);
+                }
+                if (!Schema::hasColumn('products', 'gl_account_code')) {
+                    $table->string('gl_account_code')->nullable();
+                }
+                if (!Schema::hasColumn('products', 'pricing_model')) {
+                    $table->string('pricing_model')->default('flat_fee');
+                }
+                if (!Schema::hasColumn('products', 'unit_of_measure')) {
+                    $table->string('unit_of_measure')->nullable();
+                }
+                if (!Schema::hasColumn('products', 'billing_frequency')) {
+                    $table->string('billing_frequency')->nullable();
+                }
+                if (!Schema::hasColumn('products', 'min_quantity')) {
+                    $table->integer('min_quantity')->default(1);
+                }
+                if (!Schema::hasColumn('products', 'included_quantity')) {
+                    $table->integer('included_quantity')->default(0);
+                }
+                if (!Schema::hasColumn('products', 'additional_unit_price')) {
+                    $table->decimal('additional_unit_price', 10, 2)->nullable();
+                }
+                if (!Schema::hasColumn('products', 'floor_unit_price')) {
+                    $table->decimal('floor_unit_price', 10, 2)->nullable();
+                }
+                if (!Schema::hasColumn('products', 'min_margin_percent')) {
+                    $table->decimal('min_margin_percent', 5, 2)->default(0);
+                }
+                if (!Schema::hasColumn('products', 'tax_code')) {
+                    $table->string('tax_code')->nullable();
+                }
+                if (!Schema::hasColumn('products', 'is_addon')) {
+                    $table->boolean('is_addon')->default(false);
+                }
+                if (!Schema::hasColumn('products', 'parent_product_id')) {
+                    $table->unsignedBigInteger('parent_product_id')->nullable();
                 }
             });
         }
@@ -53,11 +104,6 @@ return new class extends Migration
                 $table->timestamps();
 
                 $table->index('product_id');
-                // We can't strictly enforce FK if we are not sure about products table, 
-                // but since we created it above if missing, we can try.
-                // However, to be safe against existing tables without ID, we'll skip FK constraint for now 
-                // or add it only if we created the table.
-                // For now, just index.
             });
         }
 
@@ -110,20 +156,10 @@ return new class extends Migration
                 $table->timestamps();
             });
         }
-
-        // 5. CFO Margin View
-        DB::statement("DROP VIEW IF EXISTS cfo_margin_reports");
-        // Check if invoice_line_items exists before creating view? 
-        // This migration runs BEFORE invoice_line_items creation in 000004.
-        // So we cannot create the view here if it depends on invoice_line_items.
-        // We should move the view creation to 000004 or a later migration.
-        // But wait, the user asked to consolidate.
-        // I will move this to 000004.
     }
 
     public function down(): void
     {
-        // DB::statement("DROP VIEW IF EXISTS cfo_margin_reports"); // Moved to 000004
         Schema::dropIfExists('product_bundles');
         Schema::dropIfExists('price_overrides');
         Schema::dropIfExists('product_tier_prices');

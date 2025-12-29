@@ -59,9 +59,6 @@ return new class extends Migration
                 if (!Schema::hasColumn('billing_subscriptions', 'renewal_status')) {
                     $table->enum('renewal_status', ['active', 'pending_renewal', 'churned'])->default('active');
                 }
-                
-                // Add index if not exists
-                // $table->index('contract_end_date', 'subscriptions_contract_end_date_idx');
             });
         }
 
@@ -80,10 +77,27 @@ return new class extends Migration
                 $table->index(['subscription_id', 'stripe_price']);
             });
         }
+
+        // 3. Usage Changes
+        if (!Schema::hasTable('usage_changes')) {
+            Schema::create('usage_changes', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('company_id')->constrained()->cascadeOnDelete();
+                $table->unsignedBigInteger('subscription_id')->index();
+                $table->integer('old_quantity');
+                $table->integer('new_quantity');
+                $table->integer('delta');
+                $table->string('status')->default('pending');
+                $table->string('source')->default('rmm');
+                $table->json('metadata')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('usage_changes');
         Schema::dropIfExists('billing_subscription_items');
         Schema::dropIfExists('billing_subscriptions');
     }

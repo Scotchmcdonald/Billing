@@ -66,6 +66,12 @@ return new class extends Migration
             if (!Schema::hasColumn('companies', 'is_active')) {
                 $table->boolean('is_active')->default(true);
             }
+            if (!Schema::hasColumn('companies', 'phone')) {
+                $table->string('phone')->nullable()->after('email');
+            }
+            if (!Schema::hasColumn('companies', 'sms_notifications_enabled')) {
+                $table->boolean('sms_notifications_enabled')->default(false);
+            }
         });
 
         // 2. Billing Settings
@@ -142,13 +148,32 @@ return new class extends Migration
             });
         }
 
-        // 7. Customers (External Table Modification)
+        // 7. Billing Invitations
+        if (!Schema::hasTable('billing_invitations')) {
+            Schema::create('billing_invitations', function (Blueprint $table) {
+                $table->id();
+                $table->string('email')->index();
+                $table->string('token', 64)->unique();
+                $table->unsignedBigInteger('company_id')->nullable();
+                $table->string('company_name')->nullable();
+                $table->string('role')->default('user');
+                $table->timestamp('expires_at');
+                $table->timestamps();
+
+                $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+            });
+        }
+
+        // 8. Customers (External Table Modification)
         if (Schema::hasTable('customers')) {
             Schema::table('customers', function (Blueprint $table) {
                 if (!Schema::hasColumn('customers', 'company_id')) {
                     $table->unsignedBigInteger('company_id')->nullable()->after('id');
                     $table->index('company_id');
                     $table->foreign('company_id')->references('id')->on('companies')->nullOnDelete();
+                }
+                if (!Schema::hasColumn('customers', 'is_non_profit')) {
+                    $table->boolean('is_non_profit')->default(false)->after('company_id');
                 }
             });
         }
@@ -159,14 +184,15 @@ return new class extends Migration
         if (Schema::hasTable('customers')) {
             Schema::table('customers', function (Blueprint $table) {
                 if (Schema::hasColumn('customers', 'company_id')) {
-                    // Check if foreign key exists before dropping? 
-                    // Hard to check reliably in all DBs, but try/catch or just drop column usually drops FK in some, but strictly should drop FK first.
-                    // $table->dropForeign(['company_id']); 
                     $table->dropColumn('company_id');
+                }
+                if (Schema::hasColumn('customers', 'is_non_profit')) {
+                    $table->dropColumn('is_non_profit');
                 }
             });
         }
 
+        Schema::dropIfExists('billing_invitations');
         Schema::dropIfExists('billing_authorizations');
         Schema::dropIfExists('notification_preferences');
         Schema::dropIfExists('billing_audit_logs');
@@ -178,7 +204,7 @@ return new class extends Migration
                 $columns = [
                     'stripe_id', 'pm_type', 'pm_last_four', 'trial_ends_at',
                     'pricing_tier', 'tax_id', 'billing_address', 'primary_contact_id',
-                    'settings', 'margin_floor_percent', 'is_active'
+                    'settings', 'margin_floor_percent', 'is_active', 'phone', 'sms_notifications_enabled'
                 ];
                 // Only drop columns that exist
                 $dropColumns = [];
