@@ -36,6 +36,56 @@ class BillingServiceProvider extends ServiceProvider
         $this->app->booted(function () {
             $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
             $schedule->command('billing:generate-invoices')->monthlyOn(1, '00:00');
+
+            if (class_exists(\App\Services\Navigation\NavigationService::class)) {
+                $nav = $this->app->make(\App\Services\Navigation\NavigationService::class);
+                $nav->registerDropdown('Finance', [
+                    [
+                        'label' => 'Dashboard',
+                        'route' => 'billing.finance.dashboard',
+                        'permission' => 'finance.admin',
+                    ],
+                    [
+                        'label' => 'Pre-Flight',
+                        'route' => 'billing.finance.pre-flight',
+                        'permission' => 'finance.admin',
+                    ],
+                    [
+                        'label' => 'Usage Review',
+                        'route' => 'billing.finance.usage-review',
+                        'permission' => 'finance.admin',
+                    ],
+                    [
+                        'label' => 'Quotes',
+                        'route' => 'billing.finance.quotes.index',
+                        'permission' => 'finance.admin',
+                    ],
+                    [
+                        'label' => 'Invoices',
+                        'route' => 'billing.finance.invoices',
+                        'permission' => 'finance.admin',
+                    ],
+                    [
+                        'label' => 'Payments',
+                        'route' => 'billing.finance.payments',
+                        'permission' => 'finance.admin',
+                    ],
+                    [
+                        'label' => 'Reports',
+                        'route' => 'billing.finance.reports-hub',
+                        'permission' => 'finance.admin',
+                    ],
+                    [
+                        'label' => 'Settings',
+                        'route' => 'billing.finance.settings-hub',
+                        'permission' => 'finance.admin',
+                    ],
+                    [
+                        'label' => 'Client Portal',
+                        'route' => 'billing.portal.entry',
+                    ],
+                ]);
+            }
         });
 
         \Modules\Billing\Models\Subscription::observe(\Modules\Billing\Observers\SubscriptionObserver::class);
