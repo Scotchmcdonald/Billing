@@ -166,6 +166,5 @@ Route::middleware(['auth'])->group(function () {
 
 // Webhooks
 Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook'])->name('billing.stripe.webhook');
-Route::post('/webhooks/rmm/device-count', [\Modules\Billing\Http\Controllers\Webhooks\RmmWebhookController::class, 'deviceCount'])->name('billing.webhooks.rmm.device-count');
 
 

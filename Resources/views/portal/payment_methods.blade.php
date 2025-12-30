@@ -36,7 +36,7 @@
     @endif
 
     <div class="bg-white p-6 rounded-lg shadow">
-        <x-stripe-payment-element 
+        <x-billing::stripe-payment-element 
             :intent="$intent" 
             :return-url="route('billing.portal.dashboard', $company)"
             :company="$company"
