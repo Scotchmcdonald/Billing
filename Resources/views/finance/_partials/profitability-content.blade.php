@@ -1,5 +1,11 @@
 <!-- Profitability Content -->
 <div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Profitability Analysis</h2>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Analyze revenue, expenses, and gross profit margins</p>
+    </div>
+
     <!-- Profitability Summary -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">

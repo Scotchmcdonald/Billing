@@ -1,4 +1,4 @@
-    <div class="py-6" x-data="{ 
+<div class="space-y-6" x-data="{ 
         showCreateModal: false,
         newOverride: {
             company_id: '',
@@ -25,20 +25,16 @@
             if (price === 0) return 0;
             return ((price - this.costPrice) / price) * 100;
         }
-    }">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
-            <div class="mb-4 flex justify-end">
-                <button @click="showCreateModal = true" class="inline-flex items-center px-4 py-3 border border-transparent text-sm font-semibold rounded-lg shadow-sm text-white bg-primary-600 dark:bg-primary-500 hover:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-all duration-150">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    Create Override
-                </button>
-            </div>
+    }" @open-create-override-modal.window="showCreateModal = true">
+    
+    <!-- Header -->
+    <div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Price Overrides</h2>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Manage custom pricing and discounts for clients</p>
+    </div>
 
-            <!-- Data Table -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+    <!-- Data Table -->
+    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -92,5 +88,4 @@
                     {{ $overrides->links() }}
                 </div>
             </div>
-        </div>
-    </div>
+</div>

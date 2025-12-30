@@ -189,7 +189,7 @@ class ReportsHubController extends Controller
         $quotes = Quote::with('company')->orderBy('created_at', 'desc')->paginate(15, ['*'], 'quotes_page');
 
         // Credit Notes
-        $creditNotes = CreditNote::with('company')->orderBy('issue_date', 'desc')->paginate(15, ['*'], 'credit_notes_page');
+        $creditNotes = CreditNote::with('company')->orderBy('created_at', 'desc')->paginate(15, ['*'], 'credit_notes_page');
 
         // Revenue Recognition
         $subscriptions = Subscription::with('company')->active()->get();

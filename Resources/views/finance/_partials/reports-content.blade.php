@@ -1,5 +1,11 @@
 <!-- Detailed Reports Content -->
 <div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Detailed Reports</h2>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Generate and view detailed financial reports and transaction histories</p>
+    </div>
+
     <!-- Report Filters -->
     <div class="bg-white shadow-sm sm:rounded-lg p-6">
         <h3 class="text-lg font-medium text-gray-900 mb-4">Report Filters</h3>

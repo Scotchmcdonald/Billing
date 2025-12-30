@@ -1,5 +1,11 @@
 <!-- Executive Dashboard Content -->
 <div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Executive Dashboard</h2>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">High-level overview of key financial metrics and performance indicators</p>
+    </div>
+
     <!-- Key Metrics Row -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <!-- MRR Card -->

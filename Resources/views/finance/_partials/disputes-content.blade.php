@@ -1,17 +1,15 @@
-    <div class="container mx-auto px-4 py-8">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Invoice Disputes</h1>
-            <p class="mt-2 text-gray-600 dark:text-gray-400">
-                Manage and resolve disputed invoices
-            </p>
-        </div>
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Invoice Disputes</h2>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Manage and resolve disputed invoices</p>
+    </div>
 
-        <!-- State Indicator -->
+    <!-- State Indicator -->
         <x-billing::state-indicator state="idle" />
 
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-all duration-200 hover:shadow-md">
                 <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Active Disputes</div>
                 <div class="mt-2 text-3xl font-bold text-danger-600 dark:text-danger-400">{{ $disputes->where('status', 'open')->count() }}</div>
@@ -103,4 +101,4 @@
                 </div>
             </div>
         </div>
-    </div>
+</div>

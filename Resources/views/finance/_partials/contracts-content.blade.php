@@ -1,17 +1,15 @@
-    <div class="container mx-auto px-4 py-8">
-        <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Contract Management</h1>
-            <p class="mt-2 text-gray-600 dark:text-gray-400">
-                Track expiring contracts and renewal opportunities
-            </p>
-        </div>
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Contract Management</h2>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Track expiring contracts and renewal opportunities</p>
+    </div>
 
-        <!-- State Indicator -->
+    <!-- State Indicator -->
         <x-billing::state-indicator state="idle" />
 
         <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-all duration-200 hover:shadow-md">
                 <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Expiring Soon ({{ $daysAhead ?? 30 }} days)</div>
                 <div class="mt-2 text-3xl font-bold text-warning-600 dark:text-warning-400">{{ $expiringContracts->count() }}</div>
@@ -29,7 +27,7 @@
         </div>
 
         <!-- Expiring Contracts -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Contracts Expiring Soon</h2>
             </div>
@@ -146,4 +144,4 @@
                 </div>
             </div>
         </div>
-    </div>
+</div>

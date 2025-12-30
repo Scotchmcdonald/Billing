@@ -402,6 +402,25 @@ return new class extends Migration
             });
         }
 
+        // 10. Invoice Disputes
+        if (!Schema::hasTable('invoice_disputes')) {
+            Schema::create('invoice_disputes', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('invoice_id')->constrained('invoices')->cascadeOnDelete();
+                $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
+                $table->string('reason');
+                $table->decimal('disputed_amount', 15, 2);
+                $table->json('line_item_ids')->nullable();
+                $table->text('explanation')->nullable();
+                $table->string('status')->default('open');
+                $table->text('resolution')->nullable();
+                $table->foreignId('created_by')->constrained('users');
+                $table->foreignId('resolved_by')->nullable()->constrained('users');
+                $table->timestamp('resolved_at')->nullable();
+                $table->timestamps();
+            });
+        }
+
         // 9. CFO Margin View
         DB::statement("DROP VIEW IF EXISTS cfo_margin_reports");
         DB::statement("

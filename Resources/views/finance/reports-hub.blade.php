@@ -9,18 +9,6 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             @include('billing::finance._partials.nav')
             
-            <!-- Actions -->
-            <div class="mb-6 flex justify-end gap-3">
-                <button onclick="window.print()" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition">
-                    <i class="fas fa-print mr-2"></i>
-                    Print
-                </button>
-                <a href="{{ route('billing.finance.reports-hub.export', request()->all()) }}" class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition">
-                    <i class="fas fa-download mr-2"></i>
-                    Export
-                </a>
-            </div>
-
             <!-- Tabbed Interface -->
     <x-billing::tabs :active="request()->query('tab', 'executive')" :tabs="[
         ['id' => 'executive', 'label' => 'Executive Dashboard', 'icon' => 'chart-line'],
@@ -34,6 +22,30 @@
         ['id' => 'disputes', 'label' => 'Disputes', 'icon' => 'exclamation-circle'],
         ['id' => 'overrides', 'label' => 'Overrides', 'icon' => 'tag'],
     ]">
+        <!-- Actions -->
+        <div class="mb-6 flex justify-end gap-3">
+            <button onclick="window.print()" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition">
+                <i class="fas fa-print mr-2"></i>
+                Print
+            </button>
+            <a href="{{ route('billing.finance.reports-hub.export', request()->all()) }}" class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition">
+                <i class="fas fa-download mr-2"></i>
+                Export
+            </a>
+            <template x-if="activeTab === 'overrides'">
+                <button @click="$dispatch('open-create-override-modal')" class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition">
+                    <i class="fas fa-plus mr-2"></i>
+                    Create Override
+                </button>
+            </template>
+            <template x-if="activeTab === 'retainers'">
+                <a href="{{ route('billing.finance.retainers.create') }}" class="inline-flex items-center px-4 py-2 bg-primary-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-primary-700 focus:bg-primary-700 active:bg-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition">
+                    <i class="fas fa-plus mr-2"></i>
+                    Sell New Retainer
+                </a>
+            </template>
+        </div>
+
         <!-- Executive Dashboard Tab -->
         <x-billing::tab-panel id="executive">
             @include('billing::finance._partials.executive-dashboard-content')

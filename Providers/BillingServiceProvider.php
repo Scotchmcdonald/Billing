@@ -37,6 +37,7 @@ class BillingServiceProvider extends ServiceProvider
             $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
             $schedule->command('billing:generate-invoices')->monthlyOn(1, '00:00');
 
+            // Register Navigation Items
             if (class_exists(\App\Services\Navigation\NavigationService::class)) {
                 $nav = $this->app->make(\App\Services\Navigation\NavigationService::class);
                 $nav->registerDropdown('Finance', [
