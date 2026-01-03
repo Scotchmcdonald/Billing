@@ -5,7 +5,7 @@ namespace Modules\Billing\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Gate;
-use Laravel\Cashier\Cashier;
+// use Laravel\Cashier\Cashier;
 
 class BillingServiceProvider extends ServiceProvider
 {
@@ -14,8 +14,8 @@ class BillingServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        Cashier::useSubscriptionModel(\Modules\Billing\Models\Subscription::class);
-        Cashier::useSubscriptionItemModel(\Modules\Billing\Models\SubscriptionItem::class);
+        // Cashier::useSubscriptionModel(\Modules\Billing\Models\Subscription::class);
+        // Cashier::useSubscriptionItemModel(\Modules\Billing\Models\SubscriptionItem::class);
 
         $this->registerRoutes();
         $this->registerViews();

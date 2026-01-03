@@ -2,9 +2,9 @@
 
 namespace Modules\Billing\Models;
 
-use Laravel\Cashier\SubscriptionItem as CashierSubscriptionItem;
+use Illuminate\Database\Eloquent\Model;
 
-class SubscriptionItem extends CashierSubscriptionItem
+class SubscriptionItem extends Model
 {
     protected $table = 'billing_subscription_items';
 

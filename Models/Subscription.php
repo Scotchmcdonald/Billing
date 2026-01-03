@@ -2,7 +2,7 @@
 
 namespace Modules\Billing\Models;
 
-use Laravel\Cashier\Subscription as CashierSubscription;
+use Illuminate\Database\Eloquent\Model;
 use Modules\Billing\Models\Company;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -33,7 +33,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property-read Company $company
  * @property-read \Modules\Inventory\Models\Product $product
  */
-class Subscription extends CashierSubscription
+class Subscription extends Model
 {
     use HasFactory;
 
