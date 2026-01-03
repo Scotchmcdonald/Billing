@@ -3,6 +3,8 @@
 namespace Modules\Billing\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\Billing\Database\Factories\InvoiceLineItemFactory;
 use Modules\Inventory\Models\Product;
 
 /**
@@ -27,24 +29,36 @@ use Modules\Inventory\Models\Product;
  */
 class InvoiceLineItem extends Model
 {
+    use HasFactory;
+
+    protected static function newFactory()
+    {
+        return InvoiceLineItemFactory::new();
+    }
+
     protected $fillable = [
         'invoice_id',
         'product_id',
         'description',
         'quantity',
         'unit_price',
+        'standard_unit_price',
         'subtotal',
         'tax_amount',
         'tax_credit_amount',
         'is_fee',
+        'is_disputed',
+        'dispute_reason',
     ];
 
     protected $casts = [
         'unit_price' => 'decimal:4',
+        'standard_unit_price' => 'decimal:4',
         'subtotal' => 'decimal:4',
         'tax_amount' => 'decimal:4',
         'tax_credit_amount' => 'decimal:4',
         'is_fee' => 'boolean',
+        'is_disputed' => 'boolean',
     ];
 
     public function product()

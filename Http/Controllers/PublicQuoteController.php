@@ -6,10 +6,18 @@ use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Modules\Billing\Models\Quote;
 use Modules\Inventory\Models\Product;
+use Modules\Billing\Services\QuoteConversionService;
 use Illuminate\Support\Str;
 
 class PublicQuoteController extends Controller
 {
+    protected $conversionService;
+
+    public function __construct(QuoteConversionService $conversionService)
+    {
+        $this->conversionService = $conversionService;
+    }
+
     public function index()
     {
         // Fetch products available for public quoting
@@ -159,8 +167,13 @@ class PublicQuoteController extends Controller
             'level' => 'info'
         ]);
 
-        // TODO: Notify sales/finance that quote was accepted
-        // TODO: Trigger quote conversion to invoice/subscription workflow
+        // Trigger quote conversion to invoice/subscription workflow
+        try {
+            $this->conversionService->convert($quote);
+        } catch (\Exception $e) {
+            // Log error but don't fail the user request, finance can retry manually
+            \Illuminate\Support\Facades\Log::error("Failed to convert quote #{$quote->id}: " . $e->getMessage());
+        }
 
         return view('billing::public.quote-accepted', compact('quote'));
     }

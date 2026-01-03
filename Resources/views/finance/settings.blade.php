@@ -8,35 +8,35 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             
-            <!-- Stripe Configuration -->
+            <!-- Venn Configuration -->
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Stripe API Configuration</h3>
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Venn API Configuration</h3>
                     
-                    <form method="POST" action="{{ route('billing.finance.settings.stripe') }}">
+                    <form method="POST" action="{{ route('billing.finance.settings.venn') }}">
                         @csrf
                         
                         <div class="mb-4">
-                            <x-input-label for="stripe_key" :value="__('Stripe Publishable Key')" />
-                            <x-text-input id="stripe_key" class="block mt-1 w-full" type="text" name="stripe_key" :value="$settings['stripe_key']->value ?? ''" placeholder="pk_test_..." />
-                            <p class="mt-1 text-sm text-gray-500">Your Stripe publishable key (starts with pk_)</p>
+                            <x-input-label for="venn_key" :value="__('Venn API Key')" />
+                            <x-text-input id="venn_key" class="block mt-1 w-full" type="text" name="venn_key" :value="$settings['venn_key']->value ?? ''" placeholder="pk_test_..." />
+                            <p class="mt-1 text-sm text-gray-500">Your Venn API key</p>
                         </div>
 
                         <div class="mb-4">
-                            <x-input-label for="stripe_secret" :value="__('Stripe Secret Key')" />
-                            <x-text-input id="stripe_secret" class="block mt-1 w-full" type="password" name="stripe_secret" :value="$settings['stripe_secret']->value ?? ''" placeholder="sk_test_..." />
-                            <p class="mt-1 text-sm text-gray-500">Your Stripe secret key (starts with sk_)</p>
+                            <x-input-label for="venn_secret" :value="__('Venn Secret Key')" />
+                            <x-text-input id="venn_secret" class="block mt-1 w-full" type="password" name="venn_secret" :value="$settings['venn_secret']->value ?? ''" placeholder="sk_test_..." />
+                            <p class="mt-1 text-sm text-gray-500">Your Venn secret key</p>
                         </div>
 
                         <div class="mb-4">
-                            <x-input-label for="stripe_webhook_secret" :value="__('Stripe Webhook Secret')" />
-                            <x-text-input id="stripe_webhook_secret" class="block mt-1 w-full" type="password" name="stripe_webhook_secret" :value="$settings['stripe_webhook_secret']->value ?? ''" placeholder="whsec_..." />
-                            <p class="mt-1 text-sm text-gray-500">Your Stripe webhook signing secret (optional)</p>
+                            <x-input-label for="venn_webhook_secret" :value="__('Venn Webhook Secret')" />
+                            <x-text-input id="venn_webhook_secret" class="block mt-1 w-full" type="password" name="venn_webhook_secret" :value="$settings['venn_webhook_secret']->value ?? ''" placeholder="whsec_..." />
+                            <p class="mt-1 text-sm text-gray-500">Your Venn webhook signing secret (optional)</p>
                         </div>
 
                         <div class="flex items-center justify-end mt-4">
                             <x-primary-button>
-                                {{ __('Save Stripe Settings') }}
+                                {{ __('Save Venn Settings') }}
                             </x-primary-button>
                         </div>
                     </form>

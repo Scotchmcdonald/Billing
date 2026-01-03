@@ -43,11 +43,11 @@
             
             <div class="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-3">
                 
-                <!-- Stripe API Management (Hazard Zone) -->
+                <!-- Venn API Management (Hazard Zone) -->
                 <div class="md:col-span-1">
                     <div class="px-4 sm:px-0">
-                        <h3 class="text-base font-semibold leading-7 text-gray-900">Stripe API Configuration</h3>
-                        <p class="mt-1 text-sm leading-6 text-gray-600">Manage your Stripe API keys and Webhook secrets. <span class="text-red-600 font-bold">Handle with care.</span></p>
+                        <h3 class="text-base font-semibold leading-7 text-gray-900">Venn API Configuration</h3>
+                        <p class="mt-1 text-sm leading-6 text-gray-600">Manage your Venn API keys and Webhook secrets. <span class="text-red-600 font-bold">Handle with care.</span></p>
                     </div>
                 </div>
 
@@ -59,24 +59,24 @@
                         <div class="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                             
                             <div class="sm:col-span-4">
-                                <label for="stripe_key" class="block text-sm font-medium leading-6 text-gray-900">Publishable Key</label>
+                                <label for="venn_key" class="block text-sm font-medium leading-6 text-gray-900">API Key</label>
                                 <div class="mt-2">
-                                    <input type="text" name="stripe_key" id="stripe_key" value="{{ $settings['stripe']->firstWhere('key', 'stripe_key')->value ?? '' }}" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 font-mono">
+                                    <input type="text" name="venn_key" id="venn_key" value="{{ $settings['venn']->firstWhere('key', 'venn_key')->value ?? '' }}" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 font-mono">
                                 </div>
                             </div>
 
                             <div class="sm:col-span-4">
-                                <label for="stripe_secret" class="block text-sm font-medium leading-6 text-gray-900">Secret Key</label>
+                                <label for="venn_secret" class="block text-sm font-medium leading-6 text-gray-900">Secret Key</label>
                                 <div class="mt-2">
-                                    <input type="password" name="stripe_secret" id="stripe_secret" placeholder="sk_live_..." class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 font-mono">
+                                    <input type="password" name="venn_secret" id="venn_secret" placeholder="sk_live_..." class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 font-mono">
                                     <p class="mt-1 text-xs text-gray-500">Leave blank to keep existing secret.</p>
                                 </div>
                             </div>
 
                             <div class="sm:col-span-4">
-                                <label for="stripe_webhook_secret" class="block text-sm font-medium leading-6 text-gray-900">Webhook Secret</label>
+                                <label for="venn_webhook_secret" class="block text-sm font-medium leading-6 text-gray-900">Webhook Secret</label>
                                 <div class="mt-2">
-                                    <input type="password" name="stripe_webhook_secret" id="stripe_webhook_secret" placeholder="whsec_..." class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 font-mono">
+                                    <input type="password" name="venn_webhook_secret" id="venn_webhook_secret" placeholder="whsec_..." class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:text-sm sm:leading-6 font-mono">
                                     <p class="mt-1 text-xs text-gray-500">Leave blank to keep existing secret.</p>
                                 </div>
                             </div>
@@ -85,7 +85,7 @@
                                 <div class="flex items-center justify-between bg-gray-50 p-4 rounded-md border border-gray-200">
                                     <div>
                                         <h4 class="text-sm font-medium text-gray-900">Webhook Status</h4>
-                                        <p class="text-xs text-gray-500 mt-1">Check if your server can communicate with Stripe.</p>
+                                        <p class="text-xs text-gray-500 mt-1">Check if your server can communicate with Venn.</p>
                                     </div>
                                     <button type="button" @click="testConnection" class="inline-flex items-center rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
                                         <span x-show="!testing">Test Connection</span>

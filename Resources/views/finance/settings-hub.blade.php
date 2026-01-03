@@ -36,27 +36,27 @@
         <!-- Integrations Tab -->
         <x-billing::tab-panel id="integrations">
             <div class="space-y-6">
-                <!-- Stripe Integration -->
+                <!-- Helcim Integration -->
                 <div class="bg-white shadow-sm sm:rounded-lg p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center">
-                            <img src="https://stripe.com/img/v3/home/social.png" alt="Stripe" class="h-8 w-8 mr-3">
+                            <img src="https://www.helcim.com/images/themedark-purple-dot.svg" alt="Helcim" class="h-8 w-auto mr-3">
                             <div>
-                                <h3 class="text-lg font-medium text-gray-900">Stripe</h3>
+                                <h3 class="text-lg font-medium text-gray-900">Helcim</h3>
                                 <p class="text-sm text-gray-500">Payment processing and subscriptions</p>
                             </div>
                         </div>
-                        <x-status-badge :status="setting('stripe_secret_key') ? 'connected' : 'disconnected'" 
-                                        :text="setting('stripe_secret_key') ? 'Connected' : 'Not Connected'" />
+                        <x-status-badge :status="setting('helcim_api_key') ? 'connected' : 'disconnected'" 
+                                        :text="setting('helcim_api_key') ? 'Connected' : 'Not Connected'" />
                     </div>
-                    @include('billing::finance._partials.settings-stripe')
+                    @include('billing::finance._partials.settings-helcim')
                 </div>
 
                 <!-- QuickBooks Integration -->
                 <div class="bg-white shadow-sm sm:rounded-lg p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/94/QuickBooks_logo.svg/200px-QuickBooks_logo.svg.png" alt="QuickBooks" class="h-8 w-auto mr-3">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/7/79/Intuit_QuickBooks_logo.svg" alt="QuickBooks" class="h-8 w-auto mr-3">
                             <div>
                                 <h3 class="text-lg font-medium text-gray-900">QuickBooks Online</h3>
                                 <p class="text-sm text-gray-500">Accounting and bookkeeping sync</p>
@@ -84,84 +84,20 @@
                     @include('billing::finance._partials.settings-xero')
                 </div>
 
-                <!-- PayPal Integration -->
+                <!-- Google Chat Integration -->
                 <div class="bg-white shadow-sm sm:rounded-lg p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center">
-                            <img src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.jpg" alt="PayPal" class="h-8 w-auto mr-3">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/d/d6/Google_Chat_icon_%282023%29.svg" alt="Google Chat" class="h-8 w-8 mr-3">
                             <div>
-                                <h3 class="text-lg font-medium text-gray-900">PayPal</h3>
-                                <p class="text-sm text-gray-500">Alternative payment gateway</p>
-                            </div>
-                        </div>
-                        <x-status-badge :status="setting('paypal_client_id') ? 'connected' : 'disconnected'" 
-                                        :text="setting('paypal_client_id') ? 'Connected' : 'Not Connected'" />
-                    </div>
-                    @include('billing::finance._partials.settings-paypal')
-                </div>
-
-                <!-- GoCardless Integration -->
-                <div class="bg-white shadow-sm sm:rounded-lg p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/GoCardless_logo.svg/200px-GoCardless_logo.svg.png" alt="GoCardless" class="h-6 w-auto mr-3">
-                            <div>
-                                <h3 class="text-lg font-medium text-gray-900">GoCardless</h3>
-                                <p class="text-sm text-gray-500">Direct debit payment processing</p>
-                            </div>
-                        </div>
-                        <x-status-badge :status="setting('gocardless_access_token') ? 'connected' : 'disconnected'" 
-                                        :text="setting('gocardless_access_token') ? 'Connected' : 'Not Connected'" />
-                    </div>
-                    @include('billing::finance._partials.settings-gocardless')
-                </div>
-
-                <!-- Slack Integration -->
-                <div class="bg-white shadow-sm sm:rounded-lg p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Slack_icon_2019.svg" alt="Slack" class="h-8 w-8 mr-3">
-                            <div>
-                                <h3 class="text-lg font-medium text-gray-900">Slack</h3>
+                                <h3 class="text-lg font-medium text-gray-900">Google Chat</h3>
                                 <p class="text-sm text-gray-500">Billing notifications and alerts</p>
                             </div>
                         </div>
-                        <x-status-badge :status="setting('slack_webhook_url') ? 'connected' : 'disconnected'" 
-                                        :text="setting('slack_webhook_url') ? 'Connected' : 'Not Connected'" />
+                        <x-status-badge :status="setting('google_chat_webhook_url') ? 'connected' : 'disconnected'" 
+                                        :text="setting('google_chat_webhook_url') ? 'Connected' : 'Not Connected'" />
                     </div>
-                    @include('billing::finance._partials.settings-slack')
-                </div>
-
-                <!-- Microsoft Teams Integration -->
-                <div class="bg-white shadow-sm sm:rounded-lg p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/Microsoft_Office_Teams_%282018%E2%80%93present%29.svg/200px-Microsoft_Office_Teams_%282018%E2%80%93present%29.svg.png" alt="Microsoft Teams" class="h-8 w-8 mr-3">
-                            <div>
-                                <h3 class="text-lg font-medium text-gray-900">Microsoft Teams</h3>
-                                <p class="text-sm text-gray-500">Channel notifications via Webhook</p>
-                            </div>
-                        </div>
-                        <x-status-badge :status="setting('teams_webhook_url') ? 'connected' : 'disconnected'" 
-                                        :text="setting('teams_webhook_url') ? 'Connected' : 'Not Connected'" />
-                    </div>
-                    @include('billing::finance._partials.settings-teams')
-                </div>
-
-                <!-- Twilio SMS Integration -->
-                <div class="bg-white shadow-sm sm:rounded-lg p-6">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center">
-                            <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Twilio-logo-red.svg" alt="Twilio" class="h-8 w-auto mr-3">
-                            <div>
-                                <h3 class="text-lg font-medium text-gray-900">Twilio SMS</h3>
-                                <p class="text-sm text-gray-500">Payment reminders via SMS</p>
-                            </div>
-                        </div>
-                        <x-status-badge :status="setting('twilio_account_sid') ? 'connected' : 'disconnected'" 
-                                        :text="setting('twilio_account_sid') ? 'Connected' : 'Not Connected'" />
-                    </div>
-                    @include('billing::finance._partials.settings-twilio')
+                    @include('billing::finance._partials.settings-google-chat')
                 </div>
             </div>
         </x-billing::tab-panel>
@@ -196,7 +132,7 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" checked class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-success-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                         </label>
                     </div>
                     
@@ -207,7 +143,7 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" checked class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-success-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                         </label>
                     </div>
                     
@@ -218,7 +154,7 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" checked class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-success-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                         </label>
                     </div>
                 </div>

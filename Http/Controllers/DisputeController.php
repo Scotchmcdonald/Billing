@@ -34,7 +34,8 @@ class DisputeController extends Controller
         $validated = $request->validate([
             'reason' => 'required|string',
             'disputed_amount' => 'required|numeric|min:0.01|max:' . $invoice->total,
-            'line_items' => 'nullable|json',
+            'line_items' => 'nullable|array',
+            'line_items.*' => 'exists:invoice_line_items,id',
             'explanation' => 'required|string|min:20',
             'pause_dunning' => 'boolean',
             'files.*' => 'nullable|file|max:10240|mimes:pdf,jpg,jpeg,png',
@@ -46,28 +47,26 @@ class DisputeController extends Controller
             'company_id' => $invoice->company_id,
             'reason' => $validated['reason'],
             'disputed_amount' => $validated['disputed_amount'],
-            'line_item_ids' => $validated['line_items'] ?? null,
+            'line_item_ids' => isset($validated['line_items']) ? json_encode($validated['line_items']) : null,
             'explanation' => $validated['explanation'],
             'status' => 'open',
             'created_by' => auth()->id(),
         ]);
 
-        // Handle file uploads
-        if ($request->hasFile('files')) {
-            foreach ($request->file('files') as $file) {
-                $path = $file->store('disputes/' . $dispute->id, 'private');
-                $dispute->attachments()->create([
-                    'filename' => $file->getClientOriginalName(),
-                    'path' => $path,
-                    'mime_type' => $file->getMimeType(),
-                    'size' => $file->getSize(),
-                ]);
-            }
+        // Mark specific line items as disputed
+        if (!empty($validated['line_items'])) {
+            $invoice->lineItems()->whereIn('id', $validated['line_items'])->update([
+                'is_disputed' => true,
+                'dispute_reason' => $validated['reason']
+            ]);
         }
 
         // Update invoice status
+        // If disputed amount is less than total, it's partially disputed
+        $status = ($validated['disputed_amount'] < $invoice->total) ? 'partially_disputed' : 'disputed';
+        
         $invoice->update([
-            'status' => 'disputed',
+            'status' => $status,
             'disputed_at' => now(),
         ]);
 

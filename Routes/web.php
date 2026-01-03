@@ -26,6 +26,11 @@ Route::prefix('quote-builder')->group(function () {
     Route::post('/view/{token}/reject', [\Modules\Billing\Http\Controllers\PublicQuoteController::class, 'reject'])->name('billing.public.quote.reject');
 });
 
+// Public Payment
+Route::get('/pay/{invoice}', [\Modules\Billing\Http\Controllers\PublicPaymentController::class, 'show'])
+    ->name('billing.pay.show')
+    ->middleware('signed');
+
 // Public Invitation Acceptance
 Route::get('/invitation/{token}', [\Modules\Billing\Http\Controllers\Auth\InvitationAcceptanceController::class, 'show'])->name('billing.invitation.accept');
 Route::post('/invitation/{token}', [\Modules\Billing\Http\Controllers\Auth\InvitationAcceptanceController::class, 'store'])->name('billing.invitation.accept.store');
@@ -123,7 +128,8 @@ Route::middleware(['auth'])->group(function () {
         // Settings Hub (consolidates: General, Integrations, Templates, Numbering, Notifications)
         Route::get('/settings-hub', [SettingsHubController::class, 'index'])->name('billing.finance.settings-hub');
         Route::post('/settings-hub/general', [SettingsHubController::class, 'updateGeneral'])->name('billing.finance.settings-hub.general');
-        Route::post('/settings-hub/stripe', [SettingsHubController::class, 'updateStripe'])->name('billing.finance.settings-hub.stripe');
+        Route::post('/settings-hub/helcim', [SettingsHubController::class, 'updateHelcim'])->name('billing.finance.settings-hub.helcim');
+        Route::post('/settings-hub/google-chat', [SettingsHubController::class, 'updateGoogleChat'])->name('billing.finance.settings-hub.google-chat');
         Route::post('/settings-hub/quickbooks', [SettingsHubController::class, 'updateQuickBooks'])->name('billing.finance.settings-hub.quickbooks');
         Route::post('/settings-hub/update', [SettingsHubController::class, 'update'])->name('billing.finance.settings-hub.update');
         

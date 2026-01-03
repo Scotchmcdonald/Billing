@@ -95,9 +95,22 @@ class PortalController extends Controller
             report($e);
         }
 
+        $totalSubsidy = 0;
+        if ($company->pricing_tier === 'non_profit') {
+            foreach ($invoices as $invoice) {
+                foreach ($invoice->lineItems as $item) {
+                    $standard = $item->standard_unit_price ?? $item->unit_price;
+                    if ($standard > $item->unit_price) {
+                        $totalSubsidy += ($standard - $item->unit_price) * $item->quantity;
+                    }
+                }
+            }
+        }
+
         return view('billing::portal.dashboard', [
             'company' => $company,
             'invoices' => $invoices,
+            'totalSubsidy' => $totalSubsidy,
             'payments' => $payments,
             'quotes' => $quotes,
             'subscriptions' => $company->subscriptions,

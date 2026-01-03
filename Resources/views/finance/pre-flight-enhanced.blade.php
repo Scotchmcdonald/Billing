@@ -26,6 +26,129 @@
                 </div>
             </div>
 
+            <!-- MSP Insights -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Delta Engine -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h2 class="text-xl font-semibold mb-4">The Delta Engine</h2>
+                    <p class="text-gray-600 mb-4">Changes since last month</p>
+                    
+                    @if(isset($deltas) && count($deltas) > 0)
+                        <ul class="space-y-3">
+                            @foreach($deltas as $client => $changes)
+                                <li class="border-b pb-2">
+                                    <span class="font-medium">{{ $client }}</span>
+                                    <div class="text-sm text-green-600">Added: {{ $changes['added'] ?? 'None' }}</div>
+                                    <div class="text-sm text-red-600">Removed: {{ $changes['removed'] ?? 'None' }}</div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="text-gray-500">No significant changes detected.</p>
+                    @endif
+                </div>
+
+                <!-- Tax Credit Preview -->
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h2 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fas fa-lock text-gray-400 mr-2 text-sm"></i>
+                        Tax Credit Accrual (Internal)
+                    </h2>
+                    <p class="text-gray-600 mb-4">Recoverable revenue from Non-Profit tiers</p>
+                    
+                    <table class="min-w-full">
+                        <thead>
+                            <tr>
+                                <th class="text-left">Client</th>
+                                <th class="text-right">Accrual Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($taxCredits ?? [] as $client => $credit)
+                                <tr>
+                                    <td class="py-2">{{ $client }}</td>
+                                    <td class="text-right text-green-600 font-mono">${{ number_format($credit, 2) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Financial Safeguards (Variances) -->
+            @if(isset($variances) && count($variances) > 0)
+            <div class="mb-8 bg-white shadow rounded-lg p-6 border-l-4 border-yellow-400">
+                <h2 class="text-xl font-semibold mb-4 text-yellow-800">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Financial Safeguards: High Variance Detected
+                </h2>
+                <p class="text-gray-600 mb-4">The following invoices have a variance of >20% compared to the previous month.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    @foreach($variances as $invoiceId => $data)
+                        @php $invoice = $invoices->firstWhere('id', $invoiceId); @endphp
+                        @if($invoice)
+                            <div class="bg-yellow-50 p-4 rounded border border-yellow-200">
+                                <div class="font-bold text-gray-900">{{ $invoice->company->name }}</div>
+                                <div class="text-sm text-gray-600">Invoice #{{ $invoice->invoice_number }}</div>
+                                <div class="mt-2 flex justify-between items-end">
+                                    <div class="text-2xl font-bold {{ $data['diff'] > 0 ? 'text-green-600' : 'text-red-600' }}">
+                                        {{ $data['diff'] > 0 ? '+' : '' }}{{ $data['percent'] }}%
+                                    </div>
+                                    <div class="text-sm text-gray-500">
+                                        ${{ number_format($data['diff'], 2) }} change
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            <!-- Software Burden -->
+            <div class="mb-8 bg-white shadow rounded-lg p-6">
+                <h2 class="text-xl font-semibold mb-4 flex items-center">
+                    <i class="fas fa-server text-gray-400 mr-2"></i>
+                    OS-Based Cost Tracking (Burden)
+                </h2>
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue/User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Burden/User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Margin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($burdens ?? [] as $client => $data)
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ $client }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center text-green-700">
+                                        <i class="fas fa-arrow-up mr-2 text-xs"></i>
+                                        ${{ number_format($data['revenue'], 2) }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center text-red-600">
+                                        <i class="fas fa-arrow-down mr-2 text-xs"></i>
+                                        ${{ number_format($data['burden'], 2) }}
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @php $margin = $data['revenue'] - $data['burden']; @endphp
+                                    <span class="font-bold {{ $margin > 0 ? 'text-gray-900' : 'text-red-600' }}">
+                                        ${{ number_format($margin, 2) }}
+                                    </span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+
             <!-- Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
@@ -133,6 +256,11 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                                         ${{ number_format($invoice->total, 2) }}
+                                        @if(isset($variances[$invoice->id]))
+                                            <span class="ml-2 text-yellow-500" title="Variance: {{ $variances[$invoice->id]['percent'] }}%">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                            </span>
+                                        @endif
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @if($invoice->anomaly_score < 30)

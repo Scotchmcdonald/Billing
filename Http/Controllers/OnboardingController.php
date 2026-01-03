@@ -98,12 +98,12 @@ class OnboardingController extends Controller
 
         // Return appropriate response
         if ($validated['payment_method'] === 'card') {
-            // Create Stripe checkout session
-            $stripeUrl = $this->createStripeCheckout($company, $validated['subscription_tier']);
+            // Create Venn checkout session
+            $vennUrl = $this->createVennCheckout($company, $validated['subscription_tier']);
 
             return response()->json([
                 'success' => true,
-                'stripe_url' => $stripeUrl,
+                'venn_url' => $vennUrl,
             ]);
         }
 
@@ -114,12 +114,12 @@ class OnboardingController extends Controller
     }
 
     /**
-     * Create Stripe checkout session
+     * Create Venn checkout session
      */
-    private function createStripeCheckout(Company $company, string $tier): string
+    private function createVennCheckout(Company $company, string $tier): string
     {
-        // TODO: Implement Stripe checkout session creation
-        // This is a placeholder for the actual Stripe integration
+        // TODO: Implement Venn checkout session creation
+        // This is a placeholder for the actual Venn integration
         return route('billing.portal.dashboard', $company->slug);
     }
 }

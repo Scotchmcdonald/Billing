@@ -44,6 +44,21 @@
     }">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
+            @if(isset($totalSubsidy) && $totalSubsidy > 0)
+            <div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-6 flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-hand-holding-heart text-green-600 text-3xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-medium text-green-900">Community Partnership Impact</h3>
+                    <div class="mt-1 text-green-700">
+                        <p>As a valued non-profit partner, we are proud to support your mission.</p>
+                        <p class="mt-2 font-semibold">Total Community Grants to Date: <span class="text-2xl">${{ number_format($totalSubsidy, 2) }}</span></p>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <!-- Tabs -->
             <div class="border-b border-gray-200 dark:border-gray-700 mb-6">
                 <nav class="-mb-px flex space-x-8" aria-label="Tabs">

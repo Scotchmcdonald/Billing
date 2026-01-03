@@ -16,21 +16,20 @@ class SettingsHubController extends Controller
     }
 
     /**
-     * Update Stripe settings
+     * Update Helcim settings
      */
-    public function updateStripe(Request $request)
+    public function updateHelcim(Request $request)
     {
         $validated = $request->validate([
-            'stripe_secret_key' => 'nullable|string',
-            'stripe_publishable_key' => 'nullable|string',
-            'stripe_webhook_secret' => 'nullable|string',
+            'helcim_account_id' => 'nullable|string',
+            'helcim_api_key' => 'nullable|string',
         ]);
 
         foreach ($validated as $key => $value) {
             setting([$key => $value]);
         }
 
-        return back()->with('success', 'Stripe settings updated successfully.');
+        return back()->with('success', 'Helcim settings updated successfully.');
     }
 
     /**
@@ -69,6 +68,22 @@ class SettingsHubController extends Controller
         }
 
         return back()->with('success', 'General settings updated successfully.');
+    }
+
+    /**
+     * Update Google Chat settings
+     */
+    public function updateGoogleChat(Request $request)
+    {
+        $validated = $request->validate([
+            'google_chat_webhook_url' => 'nullable|url',
+        ]);
+
+        foreach ($validated as $key => $value) {
+            setting([$key => $value]);
+        }
+
+        return back()->with('success', 'Google Chat settings updated successfully.');
     }
 
     /**

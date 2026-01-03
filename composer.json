@@ -3,6 +3,5 @@
     "description": "Billing Module",
     "type": "laravel-module",
     "require": {
-        "laravel/cashier": "^15.0"
     }
 }

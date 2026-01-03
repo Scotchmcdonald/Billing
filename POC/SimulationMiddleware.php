@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace Modules\Billing\POC;
 
 use Closure;
 use Illuminate\Http\Request;

@@ -3,6 +3,8 @@
 namespace Modules\Billing\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\Billing\Database\Factories\InvoiceFactory;
 use Modules\Billing\Models\Company;
 
 /**
@@ -37,6 +39,13 @@ use Modules\Billing\Models\Company;
  */
 class Invoice extends Model
 {
+    use HasFactory;
+
+    protected static function newFactory()
+    {
+        return InvoiceFactory::new();
+    }
+
     protected $guarded = [];
 
     protected $casts = [
@@ -49,6 +58,11 @@ class Invoice extends Model
         'dunning_paused' => 'boolean',
         'approved_at' => 'datetime',
     ];
+
+    public function client()
+    {
+        return $this->belongsTo(\Modules\Crm\Models\Client::class, 'client_id');
+    }
 
     public function company()
     {
@@ -78,5 +92,32 @@ class Invoice extends Model
     public function billableEntries()
     {
         return $this->hasManyThrough(BillableEntry::class, InvoiceLineItem::class);
+    }
+
+    /**
+     * Get the total amount of disputed line items.
+     */
+    public function getDisputedAmountAttribute()
+    {
+        return $this->lineItems()->where('is_disputed', true)->sum('subtotal');
+    }
+
+    /**
+     * Get the amount that is currently payable (Total - Disputed - Paid).
+     */
+    public function getPayableAmountAttribute()
+    {
+        $disputed = $this->disputed_amount;
+        $paid = $this->paid_amount;
+        
+        return max(0, $this->total - $disputed - $paid);
+    }
+
+    /**
+     * Check if the invoice has any disputed items.
+     */
+    public function getIsPartiallyDisputedAttribute()
+    {
+        return $this->lineItems()->where('is_disputed', true)->exists();
     }
 }

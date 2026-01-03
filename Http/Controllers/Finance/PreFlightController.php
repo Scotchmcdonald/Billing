@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Modules\Billing\Models\Invoice;
 use Modules\Billing\Events\InvoiceApproved;
 use Modules\Billing\Events\InvoiceSent;
+use Modules\Billing\Models\Subscription;
+use Modules\Inventory\Models\Asset;
 
 class PreFlightController extends Controller
 {
@@ -22,7 +24,126 @@ class PreFlightController extends Controller
             ->orderBy('anomaly_score', 'desc')
             ->get();
 
-        return view('billing::finance.pre-flight-enhanced', compact('invoices'));
+        $deltas = $this->calculateDeltas();
+        $taxCredits = $this->calculateTaxCredits($invoices);
+        $burdens = $this->calculateBurdens();
+        $variances = $this->calculateVariances($invoices);
+
+        return view('billing::finance.pre-flight-enhanced', compact('invoices', 'deltas', 'taxCredits', 'burdens', 'variances'));
+    }
+
+    private function calculateDeltas()
+    {
+        $deltas = [];
+        $newSubscriptions = Subscription::where('created_at', '>=', now()->subDays(30))->get();
+        
+        foreach ($newSubscriptions as $sub) {
+            $clientName = $sub->company->name ?? 'Unknown Client';
+            if (!isset($deltas[$clientName])) {
+                $deltas[$clientName] = ['added' => [], 'removed' => []];
+            }
+            $deltas[$clientName]['added'][] = "{$sub->quantity} x {$sub->name}";
+        }
+
+        $formattedDeltas = [];
+        foreach ($deltas as $client => $changes) {
+            $formattedDeltas[$client] = [
+                'added' => implode(', ', $changes['added']),
+                'removed' => implode(', ', $changes['removed'])
+            ];
+        }
+
+        return $formattedDeltas;
+    }
+
+    private function calculateTaxCredits($invoices)
+    {
+        $credits = [];
+        
+        foreach ($invoices as $invoice) {
+            if ($invoice->company && $invoice->company->pricing_tier === 'non_profit') {
+                $creditTotal = 0;
+                foreach ($invoice->lineItems as $item) {
+                    // Use standard_unit_price if available, otherwise assume no credit (0)
+                    $standardPrice = $item->standard_unit_price ?? $item->unit_price;
+                    $diff = max(0, $standardPrice - $item->unit_price);
+                    $creditTotal += $diff * $item->quantity;
+                }
+                
+                if ($creditTotal > 0) {
+                    $credits[$invoice->company->name] = $creditTotal;
+                }
+            }
+        }
+
+        return $credits;
+    }
+
+    private function calculateVariances($invoices)
+    {
+        $variances = [];
+        
+        foreach ($invoices as $invoice) {
+            // Find previous invoice for this client
+            $previousInvoice = Invoice::where('client_id', $invoice->client_id)
+                ->where('id', '<', $invoice->id)
+                ->where('status', '!=', 'cancelled')
+                ->orderBy('id', 'desc')
+                ->first();
+                
+            if ($previousInvoice && $previousInvoice->total > 0) {
+                $diff = $invoice->total - $previousInvoice->total;
+                $percent = ($diff / $previousInvoice->total) * 100;
+                
+                if (abs($percent) >= 20) {
+                    $variances[$invoice->id] = [
+                        'percent' => round($percent, 1),
+                        'diff' => $diff,
+                        'previous_total' => $previousInvoice->total
+                    ];
+                }
+            }
+        }
+        
+        return $variances;
+    }
+
+    private function calculateBurdens()
+    {
+        $burdens = [];
+        $companies = \Modules\Billing\Models\Company::all();
+
+        foreach ($companies as $company) {
+            $revenue = $company->subscriptions()->where('is_active', true)->sum(DB::raw('quantity * effective_price'));
+            
+            // Use linked client to find assets, fallback to empty if not linked
+            $assets = collect();
+            if ($company->client_id) {
+                $assets = Asset::where('client_id', $company->client_id)->with('softwareProducts')->get();
+            }
+            
+            $burdenTotal = 0;
+            foreach ($assets as $asset) {
+                $burdenTotal += $asset->softwareProducts->sum('monthly_cost');
+            }
+            
+            // Try to get user count from Client, fallback to Company users or 1
+            $userCount = 0;
+            if ($company->client) {
+                $userCount = $company->client->users()->count();
+            }
+            if ($userCount == 0) {
+                $userCount = $company->users()->count();
+            }
+            if ($userCount == 0) $userCount = 1;
+
+            $burdens[$company->name] = [
+                'revenue' => $revenue / $userCount,
+                'burden' => $burdenTotal / $userCount
+            ];
+        }
+
+        return $burdens;
     }
 
     /**

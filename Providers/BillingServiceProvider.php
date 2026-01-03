@@ -22,7 +22,29 @@ class BillingServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(module_path($this->moduleName, 'Database/Migrations'));
 
         Gate::define('finance.admin', function ($user) {
-            return $user->isAdmin();
+            return $user->hasPermission('view_billing');
+        });
+
+        Gate::define('view-finance', function ($user, $company = null) {
+             if ($user->isAdmin()) return true;
+             
+             if ($company) {
+                 $companyId = $company instanceof \Modules\Billing\Models\Company ? $company->id : $company;
+                 
+                 $roleIds = $user->companies()
+                    ->where('company_id', $companyId)
+                    ->wherePivot('status', 'approved')
+                    ->pluck('company_user.role_id');
+                 
+                 if ($roleIds->isEmpty()) return false;
+
+                 return \App\Models\Permission::where('name', 'view_billing')
+                    ->whereHas('roles', function ($q) use ($roleIds) {
+                        $q->whereIn('roles.id', $roleIds);
+                    })->exists();
+             }
+
+             return $user->hasPermission('view_billing');
         });
 
         if ($this->app->runningInConsole()) {

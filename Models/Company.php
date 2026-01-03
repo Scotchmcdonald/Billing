@@ -3,7 +3,6 @@
 namespace Modules\Billing\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Laravel\Cashier\Billable;
 use Modules\Billing\Models\BillingAuthorization;
 use Modules\Billing\Models\PriceOverride;
 use Modules\Billing\Models\Subscription;
@@ -13,6 +12,7 @@ use Modules\Billing\Models\CreditNote;
 use Modules\Billing\Models\BillableEntry;
 use App\Models\Customer;
 use App\Models\User;
+use Modules\Billing\Services\HelcimService;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -33,10 +33,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property int|null $primary_contact_id
  * @property string|null $pricing_tier
  * @property string|null $scenario
- * @property string|null $stripe_id
- * @property string|null $pm_type
- * @property string|null $pm_last_four
- * @property string|null $trial_ends_at
+ * @property string|null $helcim_id
+ * @property string|null $helcim_card_token
  * @property bool $sms_notifications_enabled
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -51,10 +49,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property-read \Illuminate\Database\Eloquent\Collection|CreditNote[] $creditNotes
  * @property-read \Illuminate\Database\Eloquent\Collection|BillableEntry[] $billableEntries
  * @property-read Customer|null $customer
+ * @property-read \Modules\Crm\Models\Client|null $client
  */
 class Company extends Model
 {
-    use Billable, HasFactory;
+    use HasFactory;
+
+    public function client()
+    {
+        return $this->belongsTo(\Modules\Crm\Models\Client::class);
+    }
 
     protected static function newFactory()
     {
@@ -69,6 +73,29 @@ class Company extends Model
         'is_active' => 'boolean',
     ];
 
+    /**
+     * Create a Venn customer for the company.
+     *
+     * @param  array  $options
+     * @return \Modules\Billing\Models\Company
+     */
+    public function createAsVennCustomer(array $options = [])
+    {
+        if ($this->venn_id) {
+            return $this;
+        }
+
+        $vennService = app(VennService::class);
+        $vennId = $vennService->createCustomer($this);
+
+        if ($vennId) {
+            $this->venn_id = $vennId;
+            $this->save();
+        }
+
+        return $this;
+    }
+
     public function billingAuthorizations(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(BillingAuthorization::class);
@@ -76,9 +103,14 @@ class Company extends Model
 
     public function users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'billing_authorizations')
-                    ->withPivot('role')
+        return $this->belongsToMany(User::class, 'company_user')
+                    ->withPivot('role_id', 'status')
                     ->withTimestamps();
+    }
+
+    public function domains(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\CompanyDomain::class);
     }
 
     public function primaryContact(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -222,5 +254,48 @@ class Company extends Model
     public function getPricingTierLabel(): string
     {
         return ucfirst(str_replace('_', ' ', $this->pricing_tier));
+    }
+
+    /**
+     * Create this company as a customer in Helcim.
+     *
+     * @return string|null
+     */
+    public function createAsHelcimCustomer(): ?string
+    {
+        if ($this->helcim_id) {
+            return $this->helcim_id;
+        }
+
+        $helcimService = app(HelcimService::class);
+        $customerCode = $helcimService->createCustomer($this);
+
+        if ($customerCode) {
+            $this->helcim_id = $customerCode;
+            $this->save();
+        }
+
+        return $customerCode;
+    }
+
+    /**
+     * Charge the company using their stored Helcim card token.
+     *
+     * @param float $amount
+     * @param string $description
+     * @return array|null
+     */
+    public function charge(float $amount, string $description = ''): ?array
+    {
+        if (!$this->helcim_id || !$this->helcim_card_token) {
+            return null;
+        }
+
+        $helcimService = app(HelcimService::class);
+        // Assuming we can pass description or order ID, but for now just amount
+        // We might need to pass IP address from request() helper if available
+        $ipAddress = request()->ip() ?? '127.0.0.1';
+        
+        return $helcimService->purchase($amount, $ipAddress, $this->helcim_id, $this->helcim_card_token);
     }
 }

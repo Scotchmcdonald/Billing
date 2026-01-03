@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\Billing\Models\BillingSetting;
 use Illuminate\Support\Facades\Validator;
-use Stripe\StripeClient;
+use Illuminate\Support\Facades\Http;
 
 class SettingsController extends Controller
 {
@@ -44,19 +44,23 @@ class SettingsController extends Controller
         return redirect()->back()->with('success', 'Settings updated successfully.');
     }
 
-    public function testStripeConnection()
+    public function testVennConnection()
     {
         try {
-            $key = BillingSetting::where('key', 'stripe_secret')->first()->value;
+            $key = BillingSetting::where('key', 'venn_key')->first()->value;
+            $url = config('services.venn.url', 'https://api.venn.com/v1');
             
             if (empty($key)) {
-                return response()->json(['success' => false, 'message' => 'Stripe Secret Key is not configured.']);
+                return response()->json(['success' => false, 'message' => 'Venn API Key is not configured.']);
             }
 
-            $stripe = new StripeClient($key);
-            $stripe->balance->retrieve();
+            $response = Http::withToken($key)->get("{$url}/ping");
 
-            return response()->json(['success' => true, 'message' => 'Connection successful!']);
+            if ($response->successful()) {
+                return response()->json(['success' => true, 'message' => 'Connection successful!']);
+            }
+
+            return response()->json(['success' => false, 'message' => 'Connection failed: ' . $response->status()]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Connection failed: ' . $e->getMessage()]);
         }

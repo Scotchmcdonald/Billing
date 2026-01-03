@@ -4,6 +4,7 @@ namespace Modules\Billing\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\Billing\Database\Factories\QuoteLineItemFactory;
 
 /**
  * @property int $id
@@ -28,6 +29,11 @@ class QuoteLineItem extends Model
 {
     use HasFactory;
 
+    protected static function newFactory()
+    {
+        return QuoteLineItemFactory::new();
+    }
+
     protected $guarded = [];
 
     protected $casts = [
@@ -38,6 +44,7 @@ class QuoteLineItem extends Model
         'variance_amount' => 'decimal:2',
         'variance_percent' => 'decimal:2',
         'subtotal' => 'decimal:2',
+        'is_recurring' => 'boolean',
     ];
 
     public function quote(): \Illuminate\Database\Eloquent\Relations\BelongsTo

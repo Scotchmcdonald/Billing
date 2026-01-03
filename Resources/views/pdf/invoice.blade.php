@@ -146,6 +146,23 @@
                 </tr>
             </tbody>
         </table>
+
+        @php
+            $subsidyTotal = 0;
+            foreach($invoice->lineItems as $item) {
+                $standard = $item->standard_unit_price ?? $item->unit_price;
+                if ($standard > $item->unit_price) {
+                    $subsidyTotal += ($standard - $item->unit_price) * $item->quantity;
+                }
+            }
+        @endphp
+
+        @if($subsidyTotal > 0)
+        <div style="margin-top: 20px; background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 5px; color: #166534;">
+            <strong>Community Partnership Grant:</strong><br>
+            As a proud partner of {{ $invoice->company->name }}, we have subsidized this service by <strong>${{ number_format($subsidyTotal, 2) }}</strong> this month.
+        </div>
+        @endif
         
         @if($invoice->notes)
         <div style="margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px;">

@@ -4,6 +4,7 @@ namespace Modules\Billing\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Modules\Billing\Database\Factories\QuoteFactory;
 
 /**
  * @property int $id
@@ -36,6 +37,11 @@ class Quote extends Model
 {
     use HasFactory;
 
+    protected static function newFactory()
+    {
+        return QuoteFactory::new();
+    }
+
     protected $guarded = [];
 
     protected $casts = [
@@ -50,6 +56,11 @@ class Quote extends Model
     public function company(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Company::class);
+    }
+
+    public function client(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\Modules\Crm\Models\Client::class);
     }
 
     public function lineItems(): \Illuminate\Database\Eloquent\Relations\HasMany
