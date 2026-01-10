@@ -8,29 +8,9 @@ return new class extends Migration
 {
     public function up()
     {
-        // Service Contracts
-        if (!Schema::hasTable('service_contracts')) {
-            Schema::create('service_contracts', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('client_id')->constrained('clients')->onDelete('cascade');
-                $table->string('name');
-                $table->string('status')->default('Active'); // Active, Retired
-                $table->decimal('standard_rate', 10, 2)->default(0.00); // For tax credit calc
-                $table->timestamps();
-            });
-        }
-
-        // Contract Price History
-        if (!Schema::hasTable('contract_price_histories')) {
-            Schema::create('contract_price_histories', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('contract_id')->constrained('service_contracts')->onDelete('cascade');
-                $table->decimal('unit_price', 10, 2);
-                $table->timestamp('started_at');
-                $table->timestamp('ended_at')->nullable();
-                $table->timestamps();
-            });
-        }
+        // Note: service_contracts and contract_price_histories tables are created
+        // in migration 2026_01_03_000013_create_service_contracts_tables.php
+        // This migration now only handles quotes and quote_line_items modifications
 
         // Quotes
         if (!Schema::hasTable('quotes')) {
@@ -71,7 +51,7 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('contract_price_histories');
-        Schema::dropIfExists('service_contracts');
+        // Note: service_contracts and contract_price_histories are dropped
+        // in migration 2026_01_03_000013_create_service_contracts_tables.php down() method
     }
 };
