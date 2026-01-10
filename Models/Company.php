@@ -32,6 +32,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property bool $is_active
  * @property int|null $primary_contact_id
  * @property string|null $pricing_tier
+ * @property string $billing_mode
+ * @property float $account_balance
  * @property string|null $scenario
  * @property string|null $helcim_id
  * @property string|null $helcim_card_token
@@ -71,6 +73,7 @@ class Company extends Model
         'settings' => 'array',
         'margin_floor_percent' => 'decimal:2',
         'is_active' => 'boolean',
+        'account_balance' => 'decimal:2',
     ];
 
     /**
