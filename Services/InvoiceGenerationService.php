@@ -12,6 +12,13 @@ use Modules\Billing\Models\BillableEntry;
 
 class InvoiceGenerationService
 {
+    protected $reconciliationService;
+
+    public function __construct(ReconciliationService $reconciliationService)
+    {
+        $this->reconciliationService = $reconciliationService;
+    }
+
     /**
      * @return Collection<int, Invoice>
      */
@@ -26,7 +33,15 @@ class InvoiceGenerationService
             $hasUnbilledEntries = $company->billableEntries()->unbilled()->exists();
 
             if ($hasSubscriptions || $hasUnbilledEntries) {
-                $invoices->push($this->generateInvoiceForCompany($company, $billingDate));
+                $invoice = $this->generateInvoiceForCompany($company, $billingDate);
+                $invoices->push($invoice);
+
+                // Auto-Reconcile and Bill if ready
+                if ($invoice->status === 'pending_send') {
+                    // We finalize the draft number first to ensure a proper INV number
+                    $invoice = $this->finalizeDraftInvoice($invoice);
+                    $this->reconciliationService->reconcileAndBill($invoice);
+                }
             }
         }
 
@@ -106,12 +121,25 @@ class InvoiceGenerationService
             $taxTotal = $subtotal * $taxRate;
             $total = $subtotal + $taxTotal;
 
+            // Check Support Limits (Phase 3: Post-Paid Aggregation)
+            $status = 'pending_send'; // Ready to be finalized
+            
+            $supportTotal = $entries->whereNotNull('ticket_tier')->sum('subtotal');
+            if ($company->monthly_support_limit > 0 && $supportTotal > $company->monthly_support_limit) {
+                $status = 'pending_approval';
+            }
+
             $invoice->update([
                 'subtotal' => $subtotal,
                 'tax_total' => $taxTotal,
                 'total' => $total,
-                'status' => 'pending_review',
+                'status' => $status,
             ]);
+            
+            // Auto-finalize if integration is tight, otherwise leave as pending_send for job runner
+            if ($status === 'pending_send') {
+               // Optional: Trigger direct Helcim push here or return for batch processing
+            }
 
             return $invoice;
         });

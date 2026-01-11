@@ -1,286 +1,265 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Create Quote') }}
-        </h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-12" x-data="quoteBuilder({{ json_encode($products) }}, {{ $defaultApprovalThreshold }})">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <form action="{{ route('billing.finance.quotes.store') }}" method="POST">
-                @csrf
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                    
-                    <!-- Company / Prospect -->
-                    <div class="mb-6">
-                        <label class="block text-sm font-medium text-gray-700">Client</label>
-                        <select name="company_id" x-model="companyId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                            <option value="">-- New Prospect --</option>
-                            @foreach($companies as $company)
-                                <option value="{{ $company->id }}" data-tier="{{ $company->pricing_tier ?? 'standard' }}">{{ $company->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div x-show="!companyId" class="grid grid-cols-2 gap-4 mb-6">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Prospect Name</label>
-                            <input type="text" name="prospect_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Prospect Email</label>
-                            <input type="email" name="prospect_email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                        </div>
-                    </div>
-
-                    <!-- Pricing Tier Selection -->
-                    <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Pricing Tier</label>
-                                <select name="pricing_tier" x-model="pricingTier" @change="updateAllPrices()" 
-                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <option value="standard">Standard</option>
-                                    <option value="non_profit">Non-Profit (Discounted)</option>
-                                    <option value="consumer">Consumer</option>
-                                </select>
-                                <p class="mt-1 text-xs text-gray-500">Select pricing tier to auto-populate prices</p>
-                            </div>
-                            
-                            <div class="ml-6">
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Approval Threshold</label>
-                                <div class="flex items-center">
-                                    <input type="number" name="approval_threshold_percent" x-model="approvalThreshold" 
-                                           min="0" max="100" step="0.01"
-                                           class="w-24 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
-                                    <span class="ml-2 text-sm text-gray-600">%</span>
-                                </div>
-                                <p class="mt-1 text-xs text-gray-500">Variance threshold for approval</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Line Items -->
-                    <div class="mb-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Line Items</h3>
-                        <template x-for="(item, index) in items" :key="index">
-                            <div class="flex gap-4 mb-2 items-end">
-                                <div class="flex-1">
-                                    <label class="block text-xs text-gray-500">Product</label>
-                                    <select :name="'items['+index+'][product_id]'" x-model="item.product_id" @change="updateProduct(index)" class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
-                                        <option value="">-- Custom Item --</option>
-                                        @foreach($products as $product)
-                                            <option value="{{ $product->id }}">{{ $product->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="w-32">
-                                    <label class="block text-xs text-gray-500">Frequency</label>
-                                    <select :name="'items['+index+'][billing_frequency]'" x-model="item.billing_frequency" @change="updateProductPrice(index)" class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
-                                        <option value="monthly">Monthly</option>
-                                        <option value="annual">Annual</option>
-                                    </select>
-                                </div>
-                                <div class="flex-1">
-                                    <label class="block text-xs text-gray-500">Description</label>
-                                    <input type="text" :name="'items['+index+'][description]'" x-model="item.description" class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
-                                </div>
-                                <div class="w-24">
-                                    <label class="block text-xs text-gray-500">Qty</label>
-                                    <input type="number" :name="'items['+index+'][quantity]'" x-model="item.quantity" @input="calculateItemVariance(index)" class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
-                                </div>
-                                <div class="w-32">
-                                    <label class="block text-xs text-gray-500">Price</label>
-                                    <input type="number" step="0.01" :name="'items['+index+'][unit_price]'" x-model="item.unit_price" @input="calculateItemVariance(index)" class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
-                                    <input type="hidden" :name="'items['+index+'][standard_price]'" :value="item.standard_price">
-                                </div>
-                                <div class="w-32">
-                                    <label class="block text-xs text-gray-500">Subtotal</label>
-                                    <div class="text-right pb-2 font-bold">
-                                        <span x-text="formatMoney(item.quantity * item.unit_price)"></span>
-                                    </div>
-                                </div>
-                                <div class="w-32">
-                                    <label class="block text-xs text-gray-500">Variance</label>
-                                    <div class="text-right pb-2" :class="getVarianceClass(item.variance_percent)">
-                                        <span x-show="item.variance_percent !== 0" x-text="formatVariance(item.variance_percent)"></span>
-                                        <span x-show="item.variance_percent === 0" class="text-gray-400">--</span>
-                                    </div>
-                                </div>
-                                <button type="button" @click="removeItem(index)" class="text-red-600 hover:text-red-900 pb-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        </template>
-                        <button type="button" @click="addItem()" class="mt-2 text-sm text-indigo-600 hover:text-indigo-900">
-                            + Add Item
-                        </button>
-                    </div>
-
-                    <!-- Approval Warning -->
-                    <div x-show="requiresApproval" class="mb-6 p-4 bg-amber-50 border border-amber-300 rounded-lg">
-                        <div class="flex items-start">
-                            <svg class="w-5 h-5 text-amber-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                            </svg>
-                            <div>
-                                <h4 class="font-semibold text-amber-800">Approval Required</h4>
-                                <p class="text-sm text-amber-700 mt-1">
-                                    One or more items have a price variance exceeding <span x-text="approvalThreshold"></span>% from the standard price. 
-                                    This quote will require management approval before it can be sent to the client.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Totals -->
-                    <div class="border-t pt-4 flex justify-end">
-                        <div class="text-right">
-                            <div class="text-2xl font-bold" x-text="formatMoney(total)"></div>
-                        </div>
-                    </div>
-
-                    <!-- Actions -->
-                    <div class="mt-6 flex justify-end gap-2">
-                        <a href="{{ route('billing.finance.reports-hub', ['tab' => 'quotes']) }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                            Cancel
-                        </a>
-                        <button type="submit" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
-                            <span x-show="requiresApproval">Create Quote (Pending Approval)</span>
-                            <span x-show="!requiresApproval">Create Quote</span>
-                        </button>
-                    </div>
-                </div>
-            </form>
-        </div>
+@section('content')
+<div class="container mx-auto px-4 py-8" x-data="quoteBuilder()">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800">New Hybrid Quote</h1>
+        <button @click="saveQuote()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+            Create Quote
+        </button>
     </div>
 
-    <script>
-        function quoteBuilder(products, defaultApprovalThreshold) {
-            return {
-                companyId: '',
-                pricingTier: 'standard',
-                approvalThreshold: defaultApprovalThreshold,
-                products: products,
-                items: [
-                    { product_id: '', billing_frequency: 'monthly', description: '', quantity: 1, unit_price: 0, standard_price: 0, variance_percent: 0 }
-                ],
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left: Line Items -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">Line Items</h2>
                 
-                init() {
-                    // Watch for company selection to auto-select pricing tier
-                    this.$watch('companyId', (value) => {
-                        if (value) {
-                            const select = document.querySelector('select[name="company_id"]');
-                            const option = select.options[select.selectedIndex];
-                            const tier = option.getAttribute('data-tier') || 'standard';
-                            this.pricingTier = tier;
-                            this.updateAllPrices();
-                        }
-                    });
-                },
+                <template x-for="(item, index) in items" :key="index">
+                    <div class="border-b border-gray-200 py-4 last:border-0">
+                        <div class="flex justify-between items-start mb-2">
+                            <div class="w-1/3 pr-2">
+                                <label class="block text-sm font-medium text-gray-700">Product</label>
+                                <select x-model="item.product_id" @change="loadProductDetails(index)" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="">Select Product...</option>
+                                    <template x-for="p in availableProducts" :key="p.id">
+                                        <option :value="p.id" x-text="p.name"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            
+                            <div class="w-1/4 px-2">
+                                <label class="block text-sm font-medium text-gray-700">Billing Strategy</label>
+                                <select x-model="item.strategy" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="one_time">One-Time (Upfront)</option>
+                                    <option value="monthly">Monthly Subscription</option>
+                                    <template x-if="item.type === 'hardware'">
+                                        <option value="rto_12">Rent-to-Own (12 Mo)</option>
+                                    </template>
+                                    <template x-if="item.type === 'hardware'">
+                                        <option value="rto_24">Rent-to-Own (24 Mo)</option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <div class="w-1/6 px-2">
+                                <label class="block text-sm font-medium text-gray-700">Qty</label>
+                                <input type="number" x-model.number="item.quantity" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            
+                            <div class="w-1/6 pl-2 text-right">
+                                <label class="block text-sm font-medium text-gray-700">Total</label>
+                                <div class="mt-2 font-mono" x-text="formatMoney(calculateLineTotal(item))"></div>
+                                <div class="text-xs text-gray-500" x-show="item.strategy.startsWith('rto')">
+                                    <span x-text="formatMoney(calculateMonthlyRTO(item))"></span>/mo
+                                </div>
+                            </div>
+
+                            <div class="w-8 pt-6 pl-2">
+                                <button @click="removeItem(index)" class="text-red-500 hover:text-red-700">
+                                    &times;
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <button @click="addItem()" class="mt-4 flex items-center text-blue-600 hover:text-blue-800">
+                    <span class="text-xl font-bold mr-1">+</span> Add Line Item
+                </button>
+            </div>
+        </div>
+
+        <!-- Right: Summary & Customer -->
+        <div class="lg:col-span-1 space-y-6">
+            
+            <!-- Customer Info -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-4">Customer Details</h3>
                 
-                addItem() {
-                    this.items.push({ 
-                        product_id: '', 
-                        billing_frequency: 'monthly',
-                        description: '', 
-                        quantity: 1, 
-                        unit_price: 0,
-                        standard_price: 0,
-                        variance_percent: 0
-                    });
-                },
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Company (Existing)</label>
+                    <select x-model="company_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="">Select Company...</option>
+                        @foreach( as )
+                            <option value="{{ ->id }}">{{ ->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div x-show="!company_id" class="border-t pt-4 mt-4">
+                    <p class="text-xs text-gray-500 mb-2">Or New Prospect</p>
+                    <div class="mb-2">
+                        <label class="block text-sm font-medium text-gray-700">Prospect Name</label>
+                        <input type="text" x-model="prospect_name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div class="mb-2">
+                        <label class="block text-sm font-medium text-gray-700">Prospect Email</label>
+                        <input type="email" x-model="prospect_email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Totals -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h3 class="text-lg font-semibold mb-4">Quote Summary</h3>
                 
-                removeItem(index) {
-                    this.items.splice(index, 1);
-                },
-                
-                updateProduct(index) {
-                    const item = this.items[index];
-                    if (item.product_id) {
-                        const product = this.products.find(p => p.id == item.product_id);
-                        if (product) {
-                            item.description = product.name;
-                            // Default to monthly unless product is annual only? For now default to monthly.
-                            this.updateProductPrice(index);
-                        }
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Upfront Total:</span>
+                    <span class="font-bold" x-text="formatMoney(totals.upfront)"></span>
+                </div>
+                <div class="flex justify-between mb-2">
+                    <span class="text-gray-600">Monthly Recurring:</span>
+                    <span class="font-bold" x-text="formatMoney(totals.monthly)"></span>
+                </div>
+                <div class="border-t pt-2 mt-2 flex justify-between">
+                    <span class="text-gray-800 font-bold">Est. 1st Year TCV:</span>
+                    <span class="text-blue-600 font-bold" x-text="formatMoney(totals.tcv)"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Inject PHP data
+    const availableProductsData = @json($products);
+
+    function quoteBuilder() {
+        return {
+            items: [],
+            availableProducts: availableProductsData,
+            company_id: '',
+            prospect_name: '',
+            prospect_email: '',
+            
+            init() {
+                this.addItem(); // Start with one item
+            },
+
+            addItem() {
+                this.items.push({
+                    product_id: '',
+                    type: 'service', 
+                    base_price: 0,
+                    monthly_price: 0,
+                    quantity: 1,
+                    strategy: 'one_time' 
+                });
+            },
+            
+            removeItem(index) {
+                this.items.splice(index, 1);
+            },
+            
+            loadProductDetails(index) {
+                const item = this.items[index];
+                const product = this.availableProducts.find(p => p.id == item.product_id);
+                if (product) {
+                    item.type = product.type;
+                    item.base_price = parseFloat(product.base_price);
+                    item.monthly_price = parseFloat(product.monthly_price);
+                    
+                    // Reset strategy if invalid for new type? 
+                    // Keeping simple for now, but RTO requires hardware
+                    if (item.type !== 'hardware' && item.strategy.startsWith('rto')) {
+                        item.strategy = 'one_time';
                     }
-                },
+                }
+            },
+
+            calculateLineTotal(item) {
+                if (item.strategy === 'one_time') {
+                    return item.base_price * item.quantity;
+                }
+                // For Monthly or RTO, the 'Upfront' line total is usually just the first month's payment
+                // UNLESS the prompt implies RTO has no upfront and just monthly?
+                // Standard logic: 
+                // One-Time: Full Price
+                // Monthly: 1 Month Price
+                // RTO: 1 Month Payment
                 
-                updateProductPrice(index) {
-                    const item = this.items[index];
-                    if (item.product_id) {
-                        const product = this.products.find(p => p.id == item.product_id);
-                        if (product) {
-                            // If frequency is annual, check if product has specific annual price
-                            // Note: Tier pricing logic might conflict with Frequency logic.
-                            // Strategy: Use Frequency price if available, else fall back to standard tier logic.
-                            // Real world: Annual usually overrides Tier.
-                            
-                            let price = 0;
-                            
-                            // Check explicit frequency price first
-                            if (item.billing_frequency === 'annual' && product.frequency_prices && product.frequency_prices.annual) {
-                                price = product.frequency_prices.annual;
-                            } else if (item.billing_frequency === 'monthly' && product.frequency_prices && product.frequency_prices.monthly) {
-                                price = product.frequency_prices.monthly;
-                            } else {
-                                // Fallback to tier logic
-                                price = product.tier_prices[this.pricingTier] || product.tier_prices.standard;
-                            }
-                            
-                            item.standard_price = product.tier_prices.standard; // Standard is usually base monthly
-                            item.unit_price = price;
-                            this.calculateItemVariance(index);
-                        }
+                if (item.strategy === 'monthly') {
+                    return item.monthly_price * item.quantity;
+                }
+
+                if (item.strategy.startsWith('rto')) {
+                    return this.calculateMonthlyRTO(item);
+                }
+                
+                return 0;
+            },
+
+            calculateMonthlyRTO(item) {
+                let months = item.strategy === 'rto_12' ? 12 : 24;
+                return (item.base_price * item.quantity) / months;
+            },
+
+            get totals() {
+                let upfront = 0;
+                let monthly = 0;
+                
+                this.items.forEach(item => {
+                    if (item.strategy === 'one_time') {
+                        upfront += item.base_price * item.quantity;
+                    } else if (item.strategy === 'monthly') {
+                        monthly += item.monthly_price * item.quantity; // Fixed calculation to use monthly_price
+                    } else if (item.strategy.startsWith('rto')) {
+                        monthly += this.calculateMonthlyRTO(item);
                     }
-                },
-                
-                updateAllPrices() {
-                    this.items.forEach((item, index) => {
-                        this.updateProductPrice(index);
+                });
+
+                return {
+                    upfront: upfront, // "Initial Due"
+                    monthly: monthly,
+                    tcv: upfront + (monthly * 12) 
+                };
+            },
+
+            formatMoney(amount) {
+                return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+            },
+
+            async saveQuote() {
+                const payload = {
+                    company_id: this.company_id,
+                    prospect_name: this.prospect_name,
+                    prospect_email: this.prospect_email,
+                    items: this.items.filter(i => i.product_id).map(item => {
+                         return {
+                            product_id: item.product_id,
+                            quantity: item.quantity,
+                            strategy: item.strategy
+                         };
+                    }),
+                    _token: '{{ csrf_token() }}'
+                };
+
+                try {
+                    const response = await fetch('{{ route('billing.finance.quotes.store') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify(payload)
                     });
-                },
-                
-                calculateItemVariance(index) {
-                    const item = this.items[index];
-                    if (item.standard_price && item.standard_price > 0) {
-                        const variance = item.unit_price - item.standard_price;
-                        item.variance_percent = (variance / item.standard_price) * 100;
+                    
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    } else if (response.ok) {
+                         window.location.reload(); 
                     } else {
-                        item.variance_percent = 0;
+                        const data = await response.json();
+                        alert('Error: ' + (data.message || 'Validation Failed'));
                     }
-                },
-                
-                get total() {
-                    return this.items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
-                },
-                
-                get requiresApproval() {
-                    return this.items.some(item => Math.abs(item.variance_percent) > this.approvalThreshold);
-                },
-                
-                formatMoney(amount) {
-                    return '$' + amount.toFixed(2);
-                },
-                
-                formatVariance(percent) {
-                    const sign = percent > 0 ? '+' : '';
-                    return sign + percent.toFixed(1) + '%';
-                },
-                
-                getVarianceClass(percent) {
-                    const absPercent = Math.abs(percent);
-                    if (absPercent > this.approvalThreshold) {
-                        return 'text-red-600 font-semibold';
-                    } else if (absPercent > 0) {
-                        return percent > 0 ? 'text-orange-600' : 'text-green-600';
-                    }
-                    return 'text-gray-500';
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('An error occurred.');
                 }
             }
         }
-    </script>
-</x-app-layout>
+    }
+</script>
+@endsection

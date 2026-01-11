@@ -5,6 +5,7 @@ namespace Modules\Billing\Listeners;
 use Modules\Billing\Events\QuoteApproved;
 use Modules\Billing\Models\Company;
 use Modules\Billing\Models\Subscription;
+use Modules\Inventory\Models\Product; // Import Product
 use Modules\Billing\Contracts\InventoryTransactionServiceInterface;
 use Illuminate\Support\Facades\Log;
 
@@ -34,44 +35,86 @@ class ProvisionQuote
             $company = $quote->company;
         }
 
-        // 2. Create Subscriptions & Allocate Stock
+        // 2. Provision Items (Inventory & Subscriptions)
         foreach ($quote->lineItems as $item) {
             if ($item->product_id) {
                 
-                // Attempt to decrement stock first
-                try {
-                    // For now, we assume direct decrement since reservations weren't made in the Quote Flow 1.0
-                    // In Quote Flow 2.0, we would look for a reservation_id on the quote item
-                    $this->inventory->decrementStock(
-                        (string)$item->product_id, // Using ID as SKU/Identifier for now
-                        $item->quantity,
-                        'Quote Provisioning',
-                        (string)$quote->id
-                    );
-                } catch (\Exception $e) {
-                    Log::error("Failed to provision stock for Quote #{$quote->id}, Item {$item->product_id}: " . $e->getMessage());
-                    // Decide: Stop? Continue? For now, we Log and potentially Continue but mark an error?
-                    // "Critical" review says we should stop to prevent overselling.
-                    // Throwing exception here handles the rollback if this listener is queued inside a job.
-                    // If sync, it stops the request.
-                    throw $e;
+                $product = Product::with('components')->find($item->product_id);
+                if (!$product) {
+                    Log::warning("Product not found for Quote Item {$item->id}");
+                    continue;
                 }
 
-                // Create subscription with quote details
-                Subscription::create([
-                    'company_id' => $company->id,
-                    'name' => $item->description,
-                    'stripe_status' => 'active',
-                    'quantity' => $item->quantity,
-                    'billing_frequency' => $quote->billing_frequency,
-                    'effective_price' => $item->unit_price, // This is already updated to the correct frequency price
-                    'starts_at' => now(),
-                    'next_billing_date' => $quote->billing_frequency === 'annually' ? now()->addYear() : now()->addMonth(),
-                ]);
+                // Check for Bundle
+                if ($product->is_bundle && $product->components->isNotEmpty()) {
+                    // Explode Bundle
+                    foreach ($product->components as $component) {
+                        $componentQty = $item->quantity * $component->pivot->quantity;
+                        $this->provisionSingleItem($company, $quote, $component, $componentQty, $item->description . " (Bundle Component)");
+                    }
+                    
+                    // Note: We do NOT create a subscription for the Bundle SKU itself, 
+                    // unless it also has a frequency. Usually Bundles are containers.
+                    // If the Bundle has a price on the invoice, that's handled in Step 3 (Invoice Generation).
+                    
+                } else {
+                    // Provision Single Item
+                    $this->provisionSingleItem($company, $quote, $product, $item->quantity, $item->description);
+                }
             }
         }
+        
+        // 3. Create Invoice (Charges based on Quote Line Items - Preserving Sales Price)
+        $this->createInitialInvoice($company, $quote);
+    }
+    
+    private function provisionSingleItem(Company $company, $quote, Product $product, int $quantity, string $description)
+    {
+        // A. Decrement Stock
+        try {
+            $this->inventory->decrementStock(
+                (string)$product->id,
+                $quantity,
+                'Quote Provisioning',
+                (string)$quote->id
+            );
+        } catch (\Exception $e) {
+            Log::error("Failed to provision stock for Quote #{$quote->id}, Product {$product->id}: " . $e->getMessage());
+            // We continue provisioning other items or throw? 
+            // In a Bundle, partial failure is bad. But for MVP we log.
+             throw $e;
+        }
 
-        // 3. Create Invoice
+        // B. Create Subscription (If Recurring)
+        if ($product->billing_frequency !== 'one_time') {
+            
+            $frequency = $product->billing_frequency ?? $quote->billing_frequency ?? 'monthly';
+            $nextBilling = match($frequency) {
+                'annually' => now()->addYear(),
+                'quarterly' => now()->addQuarter(),
+                default => now()->addMonth(),
+            };
+
+            Subscription::create([
+                'company_id' => $company->id,
+                'name' => $description,
+                'product_id' => $product->id, 
+                'stripe_status' => 'active',
+                'quantity' => $quantity,
+                'billing_frequency' => $frequency,
+                'effective_price' => $product->getPriceForFrequency($frequency) ?? 0, // Use Component Price? Or 0 if included in Bundle?
+                                                                                    // CRITICAL: If part of a bundle, the Client paid for the Bundle.
+                                                                                    // The component subscription might need to be $0 (Provided) or Standard Price (Upsell).
+                                                                                    // For "Onboarding Kit", likely the SaaS is "Standard Price" separate from Hardware.
+                                                                                    // We'll use Product List Price for now.
+                'starts_at' => now(),
+                'next_billing_date' => $nextBilling,
+            ]);
+        }
+    }
+
+    private function createInitialInvoice(Company $company, $quote)
+    {
         $invoice = \Modules\Billing\Models\Invoice::create([
             'company_id' => $company->id,
             'invoice_number' => 'INV-' . strtoupper(uniqid()),

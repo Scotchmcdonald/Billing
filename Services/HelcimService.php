@@ -66,9 +66,10 @@ class HelcimService implements HelcimServiceInterface
      * @param string $ipAddress
      * @param string|null $customerCode
      * @param string|null $cardToken
+     * @param string|null $invoiceNumber
      * @return HelcimResponseDTO|null Transaction response
      */
-    public function purchase(float $amount, string $ipAddress, ?string $customerCode = null, ?string $cardToken = null): ?HelcimResponseDTO
+    public function purchase(float $amount, string $ipAddress, ?string $customerCode = null, ?string $cardToken = null, ?string $invoiceNumber = null): ?HelcimResponseDTO
     {
         try {
             $payload = [
@@ -84,6 +85,10 @@ class HelcimService implements HelcimServiceInterface
             
             if ($cardToken) {
                 $payload['cardToken'] = $cardToken;
+            }
+
+            if ($invoiceNumber) {
+                $payload['invoiceNumber'] = $invoiceNumber;
             }
 
             $response = Http::withHeaders([
