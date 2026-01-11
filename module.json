@@ -3,7 +3,7 @@
     "alias": "billing",
     "description": "MSP Billing Portal with Helcim Integration",
     "keywords": [],
-    "priority": 0,
+    "priority": 10,
     "providers": [
         "Modules\\Billing\\Providers\\BillingServiceProvider"
     ],
