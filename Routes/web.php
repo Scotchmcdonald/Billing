@@ -23,6 +23,7 @@ Route::prefix('quote-builder')->group(function () {
     Route::get('/view/{token}', [\Modules\Billing\Http\Controllers\PublicQuoteController::class, 'show'])->name('billing.public.quote.show');
     Route::post('/view/{token}/accept', [\Modules\Billing\Http\Controllers\PublicQuoteController::class, 'accept'])->name('billing.public.quote.accept');
     Route::post('/view/{token}/reject', [\Modules\Billing\Http\Controllers\PublicQuoteController::class, 'reject'])->name('billing.public.quote.reject');
+    Route::post('/view/{token}/update-line-frequency', [\Modules\Billing\Http\Controllers\PublicQuoteController::class, 'updateLineFrequency'])->name('billing.public.quote.update-line-frequency');
 });
 
 // Public Payment

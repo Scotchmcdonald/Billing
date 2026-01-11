@@ -456,6 +456,8 @@ return new class extends Migration
                 $table->decimal('variance_percent', 5, 2)->nullable();
                 $table->decimal('variance_amount', 15, 4)->nullable();
                 $table->boolean('is_recurring')->default(true);
+                $table->string('billing_frequency')->default('monthly');
+                $table->boolean('frequency_locked')->default(false);
                 $table->timestamps();
             });
         }
@@ -549,6 +551,6 @@ return new class extends Migration
         Schema::dropIfExists('billing_audit_logs');
         Schema::dropIfExists('billing_logs');
         Schema::dropIfExists('billing_settings');
-        Schema::dropIfExists('companies');
+        // Schema::dropIfExists('companies'); // Core table, do not drop
     }
 };

@@ -47,4 +47,16 @@ return [
     */
     'default_validity_days' => env('QUOTE_VALIDITY_DAYS', 30),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Helcim Payment Gateway
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for Helcim integration.
+    |
+    */
+    'helcim' => [
+        'test_mode' => env('HELCIM_TEST_MODE', false),
+    ],
+
 ];

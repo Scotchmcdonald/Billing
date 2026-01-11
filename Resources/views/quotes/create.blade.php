@@ -74,6 +74,13 @@
                                         @endforeach
                                     </select>
                                 </div>
+                                <div class="w-32">
+                                    <label class="block text-xs text-gray-500">Frequency</label>
+                                    <select :name="'items['+index+'][billing_frequency]'" x-model="item.billing_frequency" @change="updateProductPrice(index)" class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
+                                        <option value="monthly">Monthly</option>
+                                        <option value="annual">Annual</option>
+                                    </select>
+                                </div>
                                 <div class="flex-1">
                                     <label class="block text-xs text-gray-500">Description</label>
                                     <input type="text" :name="'items['+index+'][description]'" x-model="item.description" class="block w-full rounded-md border-gray-300 shadow-sm text-sm">
@@ -158,7 +165,7 @@
                 approvalThreshold: defaultApprovalThreshold,
                 products: products,
                 items: [
-                    { product_id: '', description: '', quantity: 1, unit_price: 0, standard_price: 0, variance_percent: 0 }
+                    { product_id: '', billing_frequency: 'monthly', description: '', quantity: 1, unit_price: 0, standard_price: 0, variance_percent: 0 }
                 ],
                 
                 init() {
@@ -177,6 +184,7 @@
                 addItem() {
                     this.items.push({ 
                         product_id: '', 
+                        billing_frequency: 'monthly',
                         description: '', 
                         quantity: 1, 
                         unit_price: 0,
@@ -195,8 +203,36 @@
                         const product = this.products.find(p => p.id == item.product_id);
                         if (product) {
                             item.description = product.name;
-                            item.standard_price = product.tier_prices.standard;
-                            item.unit_price = product.tier_prices[this.pricingTier] || product.tier_prices.standard;
+                            // Default to monthly unless product is annual only? For now default to monthly.
+                            this.updateProductPrice(index);
+                        }
+                    }
+                },
+                
+                updateProductPrice(index) {
+                    const item = this.items[index];
+                    if (item.product_id) {
+                        const product = this.products.find(p => p.id == item.product_id);
+                        if (product) {
+                            // If frequency is annual, check if product has specific annual price
+                            // Note: Tier pricing logic might conflict with Frequency logic.
+                            // Strategy: Use Frequency price if available, else fall back to standard tier logic.
+                            // Real world: Annual usually overrides Tier.
+                            
+                            let price = 0;
+                            
+                            // Check explicit frequency price first
+                            if (item.billing_frequency === 'annual' && product.frequency_prices && product.frequency_prices.annual) {
+                                price = product.frequency_prices.annual;
+                            } else if (item.billing_frequency === 'monthly' && product.frequency_prices && product.frequency_prices.monthly) {
+                                price = product.frequency_prices.monthly;
+                            } else {
+                                // Fallback to tier logic
+                                price = product.tier_prices[this.pricingTier] || product.tier_prices.standard;
+                            }
+                            
+                            item.standard_price = product.tier_prices.standard; // Standard is usually base monthly
+                            item.unit_price = price;
                             this.calculateItemVariance(index);
                         }
                     }
@@ -204,13 +240,7 @@
                 
                 updateAllPrices() {
                     this.items.forEach((item, index) => {
-                        if (item.product_id) {
-                            const product = this.products.find(p => p.id == item.product_id);
-                            if (product) {
-                                item.unit_price = product.tier_prices[this.pricingTier] || product.tier_prices.standard;
-                                this.calculateItemVariance(index);
-                            }
-                        }
+                        this.updateProductPrice(index);
                     });
                 },
                 

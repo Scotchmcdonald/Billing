@@ -94,6 +94,9 @@ class PublicQuoteController extends Controller
                 'quantity' => $item['quantity'],
                 'unit_price' => $product->base_price,
                 'subtotal' => $subtotal,
+                'billing_frequency' => 'monthly', // Default
+                'unit_price_monthly' => $product->getPriceForFrequency('monthly'),
+                'unit_price_annually' => $product->getPriceForFrequency('annual'),
             ]);
         }
 
@@ -207,5 +210,63 @@ class PublicQuoteController extends Controller
         ]);
 
         return view('billing::public.quote-rejected', compact('quote'));
+    }
+
+    public function updateLineFrequency(Request $request, $token)
+    {
+        $request->validate([
+            'line_item_id' => 'required|exists:quote_line_items,id',
+            'frequency' => 'required|in:monthly,annual',
+        ]);
+
+        $quote = Quote::where('token', $token)->firstOrFail();
+        
+        // Check if quote is editable (pending/draft/sent)
+        if ($quote->is_accepted || $quote->status === 'rejected') {
+            return response()->json(['error' => 'Quote is already finalized.'], 403);
+        }
+
+        // Verify line item belongs to quote
+        $lineItem = $quote->lineItems()->where('id', $request->line_item_id)->firstOrFail();
+
+        if ($lineItem->frequency_locked) {
+            return response()->json(['error' => 'Frequency is locked for this item.'], 403);
+        }
+
+        $targetPrice = match($request->frequency) {
+            'monthly' => $lineItem->unit_price_monthly,
+            'annual' => $lineItem->unit_price_annually,
+            default => null,
+        };
+
+        if (is_null($targetPrice)) {
+            return response()->json(['error' => 'Selected frequency not available for this item.'], 400);
+        }
+
+        // Update logic
+        $lineItem->update([
+            'billing_frequency' => $request->frequency,
+            'unit_price' => $targetPrice,
+            'subtotal' => $targetPrice * $lineItem->quantity,
+        ]);
+
+        // Recalculate Quote Totals
+        // Re-read fresh line items to sum
+        $newSubtotal = $quote->lineItems()->sum('subtotal');
+        // Simple logic: total = subtotal + tax_total. Assuming tax_total is fixed or 0 for now as we don't have tax calc engine here.
+        // Ideally we would re-run tax calc. For now, just update total based on subtotal change.
+        $quote->update([
+            'subtotal' => $newSubtotal,
+            'total' => $newSubtotal + ($quote->tax_total ?? 0)
+        ]);
+
+        return response()->json([
+            'message' => 'Line item updated successfully.',
+            'line_item' => $lineItem->fresh(),
+            'quote_subtotal' => $quote->subtotal,
+            'quote_total' => $quote->total,
+            'quote_tax_total' => $quote->tax_total ?? 0, // Placeholder
+            // Add breakdown logic here if needed
+        ]);
     }
 }

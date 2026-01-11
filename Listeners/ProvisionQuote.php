@@ -5,10 +5,18 @@ namespace Modules\Billing\Listeners;
 use Modules\Billing\Events\QuoteApproved;
 use Modules\Billing\Models\Company;
 use Modules\Billing\Models\Subscription;
+use Modules\Billing\Contracts\InventoryTransactionServiceInterface;
 use Illuminate\Support\Facades\Log;
 
 class ProvisionQuote
 {
+    protected InventoryTransactionServiceInterface $inventory;
+
+    public function __construct(InventoryTransactionServiceInterface $inventory)
+    {
+        $this->inventory = $inventory;
+    }
+
     public function handle(QuoteApproved $event)
     {
         $quote = $event->quote;
@@ -26,9 +34,29 @@ class ProvisionQuote
             $company = $quote->company;
         }
 
-        // 2. Create Subscriptions
+        // 2. Create Subscriptions & Allocate Stock
         foreach ($quote->lineItems as $item) {
             if ($item->product_id) {
+                
+                // Attempt to decrement stock first
+                try {
+                    // For now, we assume direct decrement since reservations weren't made in the Quote Flow 1.0
+                    // In Quote Flow 2.0, we would look for a reservation_id on the quote item
+                    $this->inventory->decrementStock(
+                        (string)$item->product_id, // Using ID as SKU/Identifier for now
+                        $item->quantity,
+                        'Quote Provisioning',
+                        (string)$quote->id
+                    );
+                } catch (\Exception $e) {
+                    Log::error("Failed to provision stock for Quote #{$quote->id}, Item {$item->product_id}: " . $e->getMessage());
+                    // Decide: Stop? Continue? For now, we Log and potentially Continue but mark an error?
+                    // "Critical" review says we should stop to prevent overselling.
+                    // Throwing exception here handles the rollback if this listener is queued inside a job.
+                    // If sync, it stops the request.
+                    throw $e;
+                }
+
                 // Create subscription with quote details
                 Subscription::create([
                     'company_id' => $company->id,

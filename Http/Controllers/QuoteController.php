@@ -28,6 +28,11 @@ class QuoteController extends Controller
                 'non_profit' => $product->getPriceForTier('non_profit'),
                 'consumer' => $product->getPriceForTier('consumer'),
             ];
+            // Enrich with frequency pricing
+            $product->frequency_prices = [
+                'monthly' => $product->getPriceForFrequency('monthly'),
+                'annual' => $product->getPriceForFrequency('annual'),
+            ];
         }
         
         $defaultApprovalThreshold = config('quotes.default_approval_threshold', 15.00);
@@ -95,7 +100,8 @@ class QuoteController extends Controller
                 'quantity' => $item['quantity'],
                 'unit_price' => $item['unit_price'],
                 'unit_price_monthly' => $item['unit_price'],
-                'unit_price_annually' => $item['unit_price'] * 12,
+                'unit_price_annually' => $item['unit_price'] * 12, // Default fallback
+                'billing_frequency' => $item['billing_frequency'] ?? 'monthly',
                 'standard_price' => $standardPrice,
                 'variance_amount' => $varianceAmount,
                 'variance_percent' => $variancePercent,
@@ -130,6 +136,11 @@ class QuoteController extends Controller
                 'standard' => $product->getPriceForTier('standard'),
                 'non_profit' => $product->getPriceForTier('non_profit'),
                 'consumer' => $product->getPriceForTier('consumer'),
+            ];
+            
+            $product->frequency_prices = [
+                'monthly' => $product->getPriceForFrequency('monthly'),
+                'annual' => $product->getPriceForFrequency('annual'),
             ];
         }
         

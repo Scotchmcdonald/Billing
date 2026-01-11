@@ -42,6 +42,8 @@ class QuoteLineItem extends Model
         'unit_price',
         'subtotal',
         'is_recurring',
+        'billing_frequency',
+        'frequency_locked',
         'unit_price_monthly',
         'unit_price_annually',
         'standard_price',
@@ -58,6 +60,7 @@ class QuoteLineItem extends Model
         'variance_percent' => 'decimal:2',
         'subtotal' => 'decimal:2',
         'is_recurring' => 'boolean',
+        'frequency_locked' => 'boolean',
     ];
 
     public function quote(): \Illuminate\Database\Eloquent\Relations\BelongsTo

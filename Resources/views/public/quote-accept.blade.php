@@ -75,23 +75,123 @@
                     </thead>
                     <tbody class="divide-y divide-gray-200">
                         @foreach($quote->lineItems as $item)
-                            <tr>
+                            <tr x-data="{ 
+                                frequency: '{{ $item->billing_frequency ?? 'monthly' }}', 
+                                loading: false,
+                                updateFrequency(newFreq) {
+                                    if(this.loading) return;
+                                    this.loading = true;
+                                    this.frequency = newFreq; // Optimistic update
+                                    fetch('{{ route('billing.public.quote.update-line-frequency', $quote->token) }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                        },
+                                        body: JSON.stringify({
+                                            line_item_id: {{ $item->id }},
+                                            frequency: newFreq
+                                        })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if(data.error) {
+                                            alert(data.error);
+                                            window.location.reload(); 
+                                        } else {
+                                            // Dispatch event to update global totals without reload
+                                            window.dispatchEvent(new CustomEvent('quote-updated', {
+                                                detail: { 
+                                                    total: data.quote_total,
+                                                    subtotal: data.quote_subtotal
+                                                }
+                                            }));
+                                        }
+                                    })
+                                    .catch(err => {
+                                        console.error(err);
+                                        alert('An error occurred');
+                                        window.location.reload();
+                                    })
+                                    .finally(() => this.loading = false);
+                                }
+                            }">
                                 <td class="px-4 py-4 whitespace-normal text-sm text-gray-900">
                                     <div class="font-medium">{{ $item->description }}</div>
+                                    
+                                    @if(!$item->frequency_locked && $item->unit_price_monthly > 0 && $item->unit_price_annually > 0)
+                                        <div class="mt-2 flex items-center space-x-2">
+                                            <span class="text-xs cursor-pointer" 
+                                                  @click="if(frequency !== 'monthly') updateFrequency('monthly')"
+                                                  :class="frequency === 'monthly' ? 'font-bold text-indigo-600' : 'text-gray-500'">
+                                                Monthly
+                                            </span>
+                                            
+                                            <button 
+                                                @click="updateFrequency(frequency === 'monthly' ? 'annual' : 'monthly')"
+                                                type="button" 
+                                                class="relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+                                                :class="frequency === 'annual' ? 'bg-indigo-600' : 'bg-gray-200'"
+                                                :disabled="loading"
+                                            >
+                                                <span 
+                                                    class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                                                    :class="frequency === 'annual' ? 'translate-x-4' : 'translate-x-0'"
+                                                ></span>
+                                            </button>
+                                            
+                                            <span class="text-xs cursor-pointer" 
+                                                  @click="if(frequency !== 'annual') updateFrequency('annual')"
+                                                  :class="frequency === 'annual' ? 'font-bold text-indigo-600' : 'text-gray-500'">
+                                                Annual
+                                                @php
+                                                    $savings = 0;
+                                                    if ($item->unit_price_monthly > 0 && $item->unit_price_annually > 0) {
+                                                        $annualized = $item->unit_price_monthly * 12;
+                                                        if ($item->unit_price_annually < $annualized) {
+                                                            $savings = round((($annualized - $item->unit_price_annually) / $annualized) * 100);
+                                                        }
+                                                    }
+                                                @endphp
+                                                @if($savings > 0)
+                                                    <span class="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                        Save {{ $savings }}%
+                                                    </span>
+                                                @endif
+                                            </span>
+                                            
+                                            <span x-show="loading" class="text-xs text-gray-400"><i class="fas fa-spinner fa-spin"></i></span>
+                                        </div>
+                                    @endif
+                                    
                                     @if($item->notes)
                                         <div class="text-gray-500 text-xs mt-1">{{ $item->notes }}</div>
                                     @endif
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ $item->quantity }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${{ number_format($item->unit_price, 2) }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">${{ number_format($item->total, 2) }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                    <!-- Dynamic Price -->
+                                    <span x-text="'$' + (frequency === 'monthly' ? '{{ number_format($item->unit_price_monthly, 2) }}' : '{{ number_format($item->unit_price_annually, 2) }}')"></span>
+                                    <div class="text-xs text-gray-400">/ <span x-text="frequency"></span></div>
+                                </td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                                    <!-- Dynamic Subtotal -->
+                                    <span x-text="'$' + (frequency === 'monthly' ? '{{ number_format($item->unit_price_monthly * $item->quantity, 2) }}' : '{{ number_format($item->unit_price_annually * $item->quantity, 2) }}')"></span>
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>
-                    <tfoot>
+                    <tfoot x-data="{ 
+                        subtotal: {{ $quote->subtotal ?? 0 }}, 
+                        total: {{ $quote->total ?? 0 }},
+                        updateTotals(e) {
+                            this.subtotal = e.detail.subtotal;
+                            this.total = e.detail.total;
+                        }
+                    }" @quote-updated.window="updateTotals($event)">
                         <tr>
                             <td colspan="3" class="px-4 py-4 text-right text-sm font-semibold text-gray-900">Total:</td>
-                            <td class="px-4 py-4 text-right text-lg font-bold text-gray-900">${{ number_format($quote->total, 2) }}</td>
+                            <td class="px-4 py-4 text-right text-lg font-bold text-gray-900" x-text="'$' + Number(total).toFixed(2)"></td>
                         </tr>
                     </tfoot>
                 </table>

@@ -67,7 +67,7 @@ class BillingServiceProvider extends ServiceProvider
             // Register Navigation Items
             if (class_exists(\App\Services\Navigation\NavigationService::class)) {
                 $nav = $this->app->make(\App\Services\Navigation\NavigationService::class);
-                $nav->registerDropdown('Finance', [
+                $financeMenu = [
                     [
                         'label' => 'Dashboard',
                         'route' => 'billing.finance.dashboard',
@@ -112,7 +112,17 @@ class BillingServiceProvider extends ServiceProvider
                         'label' => 'Client Portal',
                         'route' => 'billing.portal.entry',
                     ],
-                ]);
+                ];
+
+                if (!app()->environment('production') && config('billing.helcim.test_mode')) {
+                    $financeMenu[] = [
+                        'label' => 'Helcim Mock',
+                        'route' => 'billing.mock.helcim.index',
+                        'permission' => 'finance.admin',
+                    ];
+                }
+
+                $nav->registerDropdown('Finance', $financeMenu);
             }
         });
 
@@ -155,6 +165,17 @@ class BillingServiceProvider extends ServiceProvider
     {
         // Register BillingConfigServiceProvider to load settings from database
         $this->app->register(BillingConfigServiceProvider::class);
+
+        // Bind Helcim Service based on Environment/Config
+        $this->app->bind(\Modules\Billing\Contracts\HelcimServiceInterface::class, function ($app) {
+            $useMock = !app()->environment('production') && config('billing.helcim.test_mode', false);
+            
+            if ($useMock) {
+                return new \Modules\Billing\Services\MockHelcimService();
+            }
+            
+            return new \Modules\Billing\Services\HelcimService();
+        });
     }
 
     protected function registerRoutes()
@@ -165,6 +186,11 @@ class BillingServiceProvider extends ServiceProvider
             'prefix' => 'billing',
         ], function ($router) {
             require module_path($this->moduleName, 'Routes/web.php');
+            
+            // Register Mock Routes if in Test Mode
+            if (!app()->environment('production') && config('billing.helcim.test_mode', false)) {
+                require module_path($this->moduleName, 'Routes/web_mock.php');
+            }
         });
 
         Route::group([

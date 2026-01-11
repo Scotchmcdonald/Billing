@@ -4,9 +4,12 @@ namespace Modules\Billing\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Modules\Billing\Contracts\HelcimServiceInterface;
+use Modules\Billing\DataTransferObjects\HelcimResponseDTO;
 use Modules\Billing\Models\Company;
+use Illuminate\Support\Str;
 
-class HelcimService
+class HelcimService implements HelcimServiceInterface
 {
     protected string $apiKey;
     protected string $accountId;
@@ -63,9 +66,9 @@ class HelcimService
      * @param string $ipAddress
      * @param string|null $customerCode
      * @param string|null $cardToken
-     * @return array|null Transaction response
+     * @return HelcimResponseDTO|null Transaction response
      */
-    public function purchase(float $amount, string $ipAddress, ?string $customerCode = null, ?string $cardToken = null): ?array
+    public function purchase(float $amount, string $ipAddress, ?string $customerCode = null, ?string $cardToken = null): ?HelcimResponseDTO
     {
         try {
             $payload = [
@@ -86,11 +89,11 @@ class HelcimService
             $response = Http::withHeaders([
                 'api-token' => $this->apiKey,
                 'account-id' => $this->accountId,
-                'idempotency-key' => \Illuminate\Support\Str::uuid()->toString(),
+                'idempotency-key' => Str::uuid()->toString(),
             ])->post("{$this->baseUrl}/payment/purchase", $payload);
 
             if ($response->successful()) {
-                return $response->json();
+                return HelcimResponseDTO::fromArray($response->json());
             }
 
             Log::error('Helcim purchase failed: ' . $response->body());
