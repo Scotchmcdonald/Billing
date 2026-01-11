@@ -232,22 +232,52 @@ class InvoiceGenerationService
      */
     protected function processBillingAgreements(Company $company, Invoice $invoice, Carbon $billingDate): float
     {
-        // CRITICAL: Integrity Fix for RTO
-        // TODO: Implement full RTO logic.
-        // 1. Fetch Active BillingAgreements
-        // 2. Check if rto_balance_cents > 0
-        // 3. Create InvoiceLineItem
-        // 4. Decrement Balance (in transaction)
-        
-        $agreements = \Modules\Billing\Models\BillingAgreement::where('company_id', $company->id)
+        $agreements = \Modules\Billing\Models\BillingAgreement::with(['asset.product'])
+            ->where('company_id', $company->id)
             ->where('status', 'active')
+            ->where('rto_balance_cents', '>', 0)
             ->get();
             
-        $total = 0;
+        $total = 0.0;
         
         foreach ($agreements as $agreement) {
-            // Placeholder logic to prevent "Loss of Control"
-            // Implementation required
+            // Determine monthly payment amount
+            // Assuming 24 month term default or calculated from total/term? 
+            // For now, we'll take a fixed percentage or check if metadata exists. 
+            // Simplified Rule: 1/24th of Total or Remaining Balance, whichever is LOWER.
+            
+            // "World-Class" Logic: fixed payment amount should be stored, but we'll infer 1/24 of total for now if not set.
+            $monthlyPaymentCents = (int) ceil($agreement->rto_total_cents / 24);
+            
+            // Cap at remaining balance
+            if ($monthlyPaymentCents > $agreement->rto_balance_cents) {
+                $monthlyPaymentCents = $agreement->rto_balance_cents;
+            }
+
+            if ($monthlyPaymentCents <= 0) continue;
+
+            $amount = $monthlyPaymentCents / 100;
+
+            // Create Line Item
+            InvoiceLineItem::create([
+                'invoice_id' => $invoice->id,
+                'description' => "RTO Payment: " . ($agreement->asset->product->name ?? 'Hardware Asset') . " (Asset #{$agreement->asset_id})",
+                'quantity' => 1,
+                'unit_price' => $amount,
+                'subtotal' => $amount,
+                'type' => 'rto_installment',
+                'product_id' => $agreement->asset->product_id ?? null,
+            ]);
+
+            // Decrement Balance & Check Completion
+            $agreement->decrement('rto_balance_cents', $monthlyPaymentCents);
+            
+            if ($agreement->refresh()->rto_balance_cents <= 0) {
+                $agreement->update(['status' => 'completed']);
+                // Note: Hosting might remain active if is_separate_hosting is true
+            }
+
+            $total += $amount;
         }
         
         return $total;

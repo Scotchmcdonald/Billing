@@ -19,14 +19,29 @@
                 <template x-for="(item, index) in items" :key="index">
                     <div class="border-b border-gray-200 py-4 last:border-0">
                         <div class="flex justify-between items-start mb-2">
-                            <div class="w-1/3 pr-2">
+                            <div class="w-1/3 pr-2 relative" x-data="{ search: '', open: false, get filteredProducts() { return this.availableProducts.filter(p => p.name.toLowerCase().includes(this.search.toLowerCase()) || p.sku.toLowerCase().includes(this.search.toLowerCase())) } }">
                                 <label class="block text-sm font-medium text-gray-700">Product</label>
-                                <select x-model="item.product_id" @change="loadProductDetails(index)" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <option value="">Select Product...</option>
-                                    <template x-for="p in availableProducts" :key="p.id">
-                                        <option :value="p.id" x-text="p.name"></option>
-                                    </template>
-                                </select>
+                                <div class="relative mt-1">
+                                    <input type="text" x-model="search" @focus="open = true; search = ''" @click.away="open = false" 
+                                        :placeholder="item.product_id ? availableProducts.find(p => p.id == item.product_id)?.name : 'Search Product...'"
+                                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                                    
+                                    <div x-show="open" class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm" style="display: none;">
+                                        <template x-for="p in filteredProducts" :key="p.id">
+                                            <div @click="item.product_id = p.id; search = p.name; open = false; loadProductDetails(index)" 
+                                                 class="relative cursor-default select-none py-2 pl-3 pr-9 hover:bg-indigo-600 hover:text-white group">
+                                                <div class="flex flex-col">
+                                                    <span class="block truncate font-semibold" x-text="p.name"></span>
+                                                    <span class="block truncate text-xs text-gray-500 group-hover:text-indigo-200" x-text="p.sku"></span>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <div x-show="filteredProducts.length === 0" class="relative cursor-default select-none py-2 px-4 text-gray-700">
+                                            No products found.
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Hidden Select for native binding if needed, though we bind to item.product_id directly -->
                             </div>
                             
                             <div class="w-1/4 px-2">
@@ -82,8 +97,8 @@
                     <label class="block text-sm font-medium text-gray-700">Company (Existing)</label>
                     <select x-model="company_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                         <option value="">Select Company...</option>
-                        @foreach( as )
-                            <option value="{{ ->id }}">{{ ->name }}</option>
+                        @foreach($companies as $company)
+                            <option value="{{ $company->id }}">{{ $company->name }}</option>
                         @endforeach
                     </select>
                 </div>
