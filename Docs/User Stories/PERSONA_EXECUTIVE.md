@@ -90,7 +90,6 @@ This phase delivers a dedicated Executive Dashboard designed specifically for st
 *   **Notification Channels:**
     *   Email (immediate + daily digest)
     *   In-app notification badge
-    *   Slack webhook (optional integration)
 *   **Service:** Extends existing `AlertService`
     *   New method: `configureExecutiveAlerts()`
 

@@ -67,7 +67,29 @@ class Company extends Model
         return \Modules\Billing\Database\Factories\CompanyFactory::new();
     }
 
-    protected $guarded = [];
+        protected $fillable = [
+        'name',
+        'email',
+        'phone',
+        'address',
+        'city',
+        'state',
+        'zip',
+        'country',
+                'website',
+        'notes',
+                'is_active',
+        'billing_address',
+        'billing_mode',
+        'pricing_tier',
+        'scenario',
+        'margin_floor_percent',
+        'sms_notifications_enabled',
+        'primary_contact_id',
+        'client_id',
+        'customer_id',
+        'tax_id',
+    ];
 
     protected $casts = [
         'settings' => 'array',
@@ -170,7 +192,7 @@ class Company extends Model
     }
 
     /**
-     * Get the Stripe supported payment method types.
+     * Get the supported payment method types.
      *
      * @return array
      */

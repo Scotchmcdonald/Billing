@@ -4,7 +4,6 @@ use Illuminate\Support\Facades\Route;
 use Modules\Billing\Http\Controllers\PortalController;
 use Modules\Billing\Http\Controllers\FinanceController;
 use Modules\Billing\Http\Controllers\PriceOverrideController;
-use Modules\Billing\Http\Controllers\StripeWebhookController;
 use Modules\Billing\Http\Controllers\ExecutiveDashboardController;
 use Modules\Billing\Http\Controllers\ContractController;
 use Modules\Billing\Http\Controllers\CreditNoteController;
@@ -170,7 +169,7 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-// Webhooks
-Route::post('/stripe/webhook', [StripeWebhookController::class, 'handleWebhook'])->name('billing.stripe.webhook');
+
+
 
 

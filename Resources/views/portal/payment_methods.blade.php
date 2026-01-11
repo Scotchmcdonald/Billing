@@ -36,11 +36,12 @@
     @endif
 
     <div class="bg-white p-6 rounded-lg shadow">
-        <x-billing::stripe-payment-element 
-            :intent="$intent" 
-            :return-url="route('billing.portal.dashboard', $company)"
-            :company="$company"
-        />
+        <div class="p-4 border border-gray-200 rounded-md bg-gray-50 text-center">
+             <p class="text-gray-600 mb-4">Payment method management is handled via Helcim.</p>
+             <a href="#" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                Manage Payment Methods
+             </a>
+        </div>
     </div>
 </div>
 @endsection

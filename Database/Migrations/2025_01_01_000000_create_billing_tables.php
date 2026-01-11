@@ -8,9 +8,37 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // 1. Companies
-        if (!Schema::hasTable('companies')) {
-            Schema::create('companies', function (Blueprint $table) {
+        // 1. Companies (Extending CRM definition)
+        if (Schema::hasTable('companies')) {
+            Schema::table('companies', function (Blueprint $table) {
+                // Ensure columns don't exist before adding
+                if (!Schema::hasColumn('companies', 'helcim_id')) {
+                    $table->string('helcim_id')->nullable()->index();
+                    $table->string('helcim_card_token')->nullable();
+                    $table->decimal('account_balance', 15, 2)->default(0);
+                    $table->string('tax_id', 50)->nullable();
+                    $table->text('billing_address')->nullable();
+                    $table->boolean('sms_notifications_enabled')->default(false);
+                    $table->string('billing_mode')->default('card');
+                    $table->string('pm_type')->nullable();
+                    $table->string('pm_last_four', 4)->nullable();
+                    $table->timestamp('trial_ends_at')->nullable();
+                }
+                
+                // Fields that might have been added by Core Migration already
+                if (!Schema::hasColumn('companies', 'pricing_tier')) {
+                    $table->enum('pricing_tier', ['standard', 'non_profit', 'consumer'])->default('standard');
+                }
+                if (!Schema::hasColumn('companies', 'margin_floor_percent')) {
+                    $table->decimal('margin_floor_percent', 5, 2)->default(20.00);
+                }
+                if (!Schema::hasColumn('companies', 'scenario')) {
+                    $table->string('scenario')->nullable();
+                }
+            });
+        } else {
+            // Fallback if CRM didn't run (though it requires CRM)
+             Schema::create('companies', function (Blueprint $table) {
                 $table->id();
                 $table->string('name');
                 $table->string('email')->nullable();
@@ -18,27 +46,30 @@ return new class extends Migration
                 $table->string('address')->nullable();
                 $table->string('city')->nullable();
                 $table->string('state')->nullable();
-                $table->string('postal_code')->nullable();
                 $table->string('zip')->nullable();
                 $table->string('country')->nullable();
                 $table->string('vat_number')->nullable();
+                // CRM Fields
+                $table->unsignedBigInteger('primary_contact_id')->nullable();
+                $table->unsignedBigInteger('client_id')->nullable(); 
+                $table->json('settings')->nullable();
+                $table->boolean('is_active')->default(true);
+                
+                // Billing Fields
                 $table->string('helcim_id')->nullable()->index();
                 $table->string('helcim_card_token')->nullable();
                 $table->decimal('account_balance', 15, 2)->default(0);
                 $table->enum('pricing_tier', ['standard', 'non_profit', 'consumer'])->default('standard');
                 $table->string('tax_id', 50)->nullable();
                 $table->text('billing_address')->nullable();
-                $table->unsignedBigInteger('primary_contact_id')->nullable();
-                $table->unsignedBigInteger('client_id')->nullable(); 
-                $table->json('settings')->nullable();
                 $table->decimal('margin_floor_percent', 5, 2)->default(20.00);
-                $table->boolean('is_active')->default(true);
                 $table->boolean('sms_notifications_enabled')->default(false);
                 $table->string('billing_mode')->default('card'); 
                 $table->string('pm_type')->nullable();
                 $table->string('pm_last_four', 4)->nullable();
                 $table->timestamp('trial_ends_at')->nullable();
                 $table->string('scenario')->nullable();
+
                 $table->timestamps();
             });
         }
@@ -117,7 +148,6 @@ return new class extends Migration
                 $table->string('notification_type');
                 $table->boolean('email_enabled')->default(true);
                 $table->boolean('in_app_enabled')->default(true);
-                $table->boolean('slack_enabled')->default(false);
                 $table->timestamps();
             });
         }
@@ -159,10 +189,6 @@ return new class extends Migration
                 $table->decimal('effective_price', 15, 4)->nullable();
                 $table->enum('billing_frequency', ['monthly', 'quarterly', 'annual', 'custom'])->default('monthly');
                 
-                $table->string('stripe_id')->nullable();
-                $table->string('stripe_status')->nullable();
-                $table->string('stripe_price')->nullable();
-                
                 $table->timestamp('starts_at')->nullable();
                 $table->timestamp('ends_at')->nullable();
                 $table->timestamp('trial_ends_at')->nullable();
@@ -187,9 +213,6 @@ return new class extends Migration
             Schema::create('billing_subscription_items', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('subscription_id')->constrained('billing_subscriptions')->cascadeOnDelete();
-                $table->string('stripe_id')->nullable();
-                $table->string('stripe_product')->nullable();
-                $table->string('stripe_price')->nullable();
                 $table->integer('quantity')->default(1);
                 $table->timestamps();
             });
@@ -199,7 +222,11 @@ return new class extends Migration
         if (!Schema::hasTable('contract_price_histories')) {
             Schema::create('contract_price_histories', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('contract_id')->constrained('billing_subscriptions')->cascadeOnDelete();
+                // Originally constrained to billing_subscriptions, but model says ServiceContract.
+                // Assuming ServiceContract is the correct parent.
+                // However, ServiceContract table is created in step 13, which is AFTER this.
+                // We need to reorder or use unsignedBigInteger w/ late constraint.
+                $table->unsignedBigInteger('contract_id'); 
                 $table->decimal('unit_price', 15, 4);
                 $table->timestamp('started_at')->useCurrent();
                 $table->timestamp('ended_at')->nullable();
@@ -248,7 +275,6 @@ return new class extends Migration
                 $table->timestamp('dunning_paused_at')->nullable();
                 $table->string('dunning_pause_reason')->nullable();
                 
-                $table->string('stripe_invoice_id')->nullable()->index();
                 $table->string('xero_invoice_id')->nullable()->index();
                 $table->string('revenue_recognition_method')->nullable();
                 $table->integer('anomaly_score')->default(0);
@@ -353,6 +379,10 @@ return new class extends Migration
                 $table->string('reason');
                 $table->text('explanation')->nullable();
                 $table->string('status')->default('open');
+                $table->text('resolution')->nullable();
+                $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+                $table->foreignId('resolved_by')->nullable()->constrained('users')->nullOnDelete();
+                $table->timestamp('resolved_at')->nullable();
                 $table->json('line_item_ids')->nullable();
                 $table->timestamps();
             });

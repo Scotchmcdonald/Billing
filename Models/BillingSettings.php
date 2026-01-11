@@ -7,7 +7,13 @@ use Illuminate\Support\Facades\Crypt;
 
 class BillingSettings extends Model
 {
-    protected $guarded = [];
+        protected $fillable = [
+        'key',
+        'value',
+        'type',
+        'group',
+        'is_encrypted',
+    ];
 
     protected $casts = [
         'is_encrypted' => 'boolean',

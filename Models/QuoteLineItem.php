@@ -34,7 +34,20 @@ class QuoteLineItem extends Model
         return QuoteLineItemFactory::new();
     }
 
-    protected $guarded = [];
+        protected $fillable = [
+        'quote_id',
+        'product_id',
+        'description',
+        'quantity',
+        'unit_price',
+        'subtotal',
+        'is_recurring',
+        'unit_price_monthly',
+        'unit_price_annually',
+        'standard_price',
+        'variance_amount',
+        'variance_percent',
+    ];
 
     protected $casts = [
         'unit_price' => 'decimal:2',

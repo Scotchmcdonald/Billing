@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class BillingAuthorization extends Model
 {
-    protected $guarded = [];
+        protected $fillable = [
+        'company_id',
+        'user_id',
+        'role',
+    ];
 
     public function user()
     {

@@ -116,7 +116,7 @@ Successfully implemented all 6 world-class UX improvements identified in the UX_
 - **Wizard Steps:**
   1. **Company Information:** Name, industry, size, full address
   2. **Billing Contact:** Name, email, phone, title
-  3. **Payment Method:** Credit card (Stripe) or Invoice (Net 30)
+  3. **Payment Method:** Credit card (Helcim) or Invoice (Net 30)
   4. **Subscription Tier:** Basic ($99), Professional ($299), Enterprise ($799)
 
 - **Features:**
@@ -125,7 +125,7 @@ Successfully implemented all 6 world-class UX improvements identified in the UX_
   - Payment method selection with visual cards
   - Subscription tier comparison with feature lists
   - Alpine.js state management for smooth UX
-  - Stripe redirect for card payment setup
+  - Helcim redirect for card payment setup
 
 - **Routes Added:**
   - `GET /onboarding` - Show wizard
@@ -136,7 +136,7 @@ Successfully implemented all 6 world-class UX improvements identified in the UX_
 - Progress indicator reduces abandonment by showing completion status
 - Visual subscription comparison helps clients choose appropriate tier
 - Reduces onboarding time from 15-20 minutes to 5-7 minutes
-- All data collected before Stripe redirect (no re-entry)
+- All data collected before Helcim redirect (no re-entry)
 
 ---
 
@@ -194,7 +194,7 @@ Successfully implemented all 6 world-class UX improvements identified in the UX_
   - **Approved:** Green icon, internal approval
   - **Sent:** Blue icon, delivered to client
   - **Viewed:** Indigo icon, client opened invoice
-  - **Payment Attempted:** Yellow icon, Stripe charge attempt
+  - **Payment Attempted:** Yellow icon, Helcim charge attempt
   - **Paid:** Green icon, payment received
   - **Disputed:** Red icon, dispute filed
   - **Overdue:** Orange icon, past due date
@@ -310,7 +310,7 @@ Successfully implemented all 6 world-class UX improvements identified in the UX_
 
 ### Immediate Follow-ups
 1. **Notifications:** Send email when quote viewed/accepted (TODO in code)
-2. **Stripe Integration:** Complete payment method setup in onboarding wizard
+2. **Helcim Integration:** Complete payment method setup in onboarding wizard
 3. **Credit Note UI:** Build interface for creating credit notes from disputes
 4. **Activity Webhooks:** Real-time updates via websockets for timeline
 

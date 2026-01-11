@@ -201,7 +201,7 @@ Tabbed interfaces consolidate related views under a single page, reducing:
     </x-billing::tab-panel>
     
     <x-billing::tab-panel id="integrations">
-        <!-- Stripe, QuickBooks, etc -->
+        <!-- Helcim, QuickBooks, etc -->
     </x-billing::tab-panel>
     
     <x-billing::tab-panel id="templates" lazy="true">

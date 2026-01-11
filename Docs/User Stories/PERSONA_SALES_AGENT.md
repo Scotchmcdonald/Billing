@@ -91,7 +91,6 @@ This phase completes the sales cycle from initial quote to revenue capture. Impl
 *   **Notification Channels:**
     *   In-app notification badge
     *   Email notification (immediate)
-    *   Slack webhook (if configured)
     *   SMS (optional, for high-value quotes)
 *   **Notification Content:**
     *   "John Doe from Acme Corp viewed Quote #Q-2024-001"
@@ -342,7 +341,7 @@ This phase completes the sales cycle from initial quote to revenue capture. Impl
 #### Testing Tasks
 - [ ] Test kanban drag-and-drop across browsers
 - [ ] Test quote view tracking accuracy
-- [ ] Test notification delivery (email, in-app, Slack)
+- [ ] Test notification delivery (email, in-app)
 - [ ] Test quote cloning with various configurations
 - [ ] Test margin calculations with discounts and overrides
 - [ ] Test margin floor enforcement and approval workflow

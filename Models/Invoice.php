@@ -25,7 +25,6 @@ use Modules\Billing\Models\Company;
  * @property int|null $approved_by
  * @property float $paid_amount
  * @property string|null $xero_invoice_id
- * @property string|null $stripe_invoice_id
  * @property array|null $metadata
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -46,7 +45,34 @@ class Invoice extends Model
         return InvoiceFactory::new();
     }
 
-    protected $guarded = [];
+        protected $fillable = [
+        'company_id',
+        'client_id',
+        'invoice_number',
+        'status',
+        'issue_date',
+        'due_date',
+        'sent_at',
+        'paid_at',
+        'subtotal',
+        'tax_total',
+        'total',
+        'paid_amount',
+        'currency',
+        'notes',
+        'internal_notes',
+                        'is_disputed',
+        'disputed_at',
+        'dunning_paused',
+        'dunning_paused_at',
+        'dunning_pause_reason',
+        'revenue_recognition_method',
+        'metadata',
+                'approved_by',
+        'approved_at',
+        'xero_invoice_id',
+        'anomaly_score',
+    ];
 
     protected $casts = [
         'issue_date' => 'date',

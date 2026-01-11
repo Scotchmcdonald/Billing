@@ -51,7 +51,7 @@ This document summarizes the transformation of the Billing module UI to use cons
 
 **Consolidates 5 settings screens:**
 - General Settings → Tab: "General Settings"
-- Stripe Integration → Tab: "Integrations" (section)
+- Helcim Integration → Tab: "Integrations" (section)
 - QuickBooks Integration → Tab: "Integrations" (section)
 - Invoice Templates → Tab: "Invoice Templates"
 - Invoice Numbering → Tab: "Numbering"
@@ -114,7 +114,7 @@ Created in `/Modules/Billing/Resources/views/finance/_partials/`:
 3. `ar-aging-content.blade.php`
 4. `profitability-content.blade.php`
 5. `settings-general.blade.php`
-6. `settings-stripe.blade.php`
+6. `settings-helcim.blade.php`
 7. `settings-quickbooks.blade.php`
 8. `invoice-template-content.blade.php`
 9. `invoice-numbering-content.blade.php`
@@ -131,7 +131,7 @@ GET  /billing/finance/reports-hub
 // Settings Hub
 GET  /billing/finance/settings-hub
 POST /billing/finance/settings-hub/general
-POST /billing/finance/settings-hub/stripe
+POST /billing/finance/settings-hub/helcim
 POST /billing/finance/settings-hub/quickbooks
 
 // Invoice Detail with Tabs

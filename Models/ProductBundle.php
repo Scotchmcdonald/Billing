@@ -9,7 +9,13 @@ class ProductBundle extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+        protected $fillable = [
+        'name',
+        'description',
+        'product_ids',
+        'discount_percent',
+        'is_active',
+    ];
 
     protected $casts = [
         'product_ids' => 'array',

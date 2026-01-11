@@ -6,7 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class ProductTierPrice extends Model
 {
-    protected $guarded = [];
+        protected $fillable = [
+        'product_id',
+        'tier',
+        'price',
+        'starts_at',
+        'ends_at',
+    ];
 
     protected $casts = [
         'price' => 'decimal:4',

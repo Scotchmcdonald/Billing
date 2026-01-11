@@ -24,7 +24,15 @@ class BillingAuditLog extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+        protected $fillable = [
+        'auditable_type',
+        'auditable_id',
+        'user_id',
+        'event',
+        'old_values',
+        'new_values',
+        'ip_address',
+    ];
 
     protected $casts = [
         'old_values' => 'array',

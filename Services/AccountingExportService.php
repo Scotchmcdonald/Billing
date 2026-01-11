@@ -25,7 +25,7 @@ class AccountingExportService
         // Header
         $csv->insertOne([
             'Company Name',
-            'Stripe Customer ID',
+            'Helcim Customer ID',
             'Payment Method Type',
             'Last 4 Digits',
             'Current Balance',
@@ -37,7 +37,7 @@ class AccountingExportService
         foreach ($companies as $company) {
             $churnRisk = $this->calculateChurnRisk($company);
             
-            // Calculate balance from invoices instead of calling Stripe API
+            // Calculate balance from invoices or use local balance field
             $balance = $company->invoices()
                 ->whereIn('status', ['sent', 'overdue'])
                 ->sum('total');

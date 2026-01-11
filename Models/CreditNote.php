@@ -28,7 +28,15 @@ class CreditNote extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $guarded = [];
+        protected $fillable = [
+        'company_id',
+        'invoice_id',
+        'amount',
+        'reason',
+        'notes',
+        'issued_by',
+        'applied_at',
+    ];
 
     protected $casts = [
         'amount' => 'integer',

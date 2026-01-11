@@ -6,7 +6,6 @@ use Modules\Billing\Http\Controllers\Api\InvoiceController;
 use Modules\Billing\Http\Controllers\Api\PriceOverrideController;
 use Modules\Billing\Http\Controllers\Api\BillableEntryController;
 use Modules\Billing\Http\Controllers\Api\PaymentController;
-use Modules\Billing\Http\Controllers\Webhooks\StripeWebhookController;
 use Modules\Billing\Http\Controllers\Webhooks\HelcimWebhookController;
 use Modules\Billing\Http\Controllers\Webhooks\RmmWebhookController;
 
@@ -22,7 +21,6 @@ use Modules\Billing\Http\Controllers\Webhooks\RmmWebhookController;
 */
 
 // Webhooks
-Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle'])->name('billing.webhooks.stripe');
 Route::post('/webhooks/helcim', [HelcimWebhookController::class, 'handle'])->name('billing.webhooks.helcim');
 Route::post('/webhooks/rmm/device-count', [RmmWebhookController::class, 'deviceCount'])->name('billing.webhooks.rmm.device-count');
 

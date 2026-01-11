@@ -237,10 +237,9 @@
 </div>
 
 @push('scripts')
-<script src="https://js.stripe.com/v3/"></script>
 <script>
-    // Stripe initialization logic would go here
-    console.log('Stripe JS loaded');
+    // Payment initialization logic would go here
+    console.log('Payment JS loaded');
 </script>
 @endpush
 @endsection

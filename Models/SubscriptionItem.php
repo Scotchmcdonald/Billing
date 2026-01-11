@@ -8,7 +8,10 @@ class SubscriptionItem extends Model
 {
     protected $table = 'billing_subscription_items';
 
-    protected $guarded = [];
+        protected $fillable = [
+        'subscription_id',
+                'quantity',
+    ];
 
     public function assets()
     {

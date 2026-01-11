@@ -10,11 +10,15 @@ class NotificationPreference extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+        protected $fillable = [
+        'user_id',
+        'notification_type',
+        'email_enabled',
+        'in_app_enabled',
+    ];
 
     protected $casts = [
         'email_enabled' => 'boolean',
-        'slack_enabled' => 'boolean',
         'in_app_enabled' => 'boolean',
     ];
 
@@ -40,14 +44,6 @@ class NotificationPreference extends Model
     public function scopeEmailEnabled($query)
     {
         return $query->where('email_enabled', true);
-    }
-
-    /**
-     * Scope to get preferences where Slack is enabled.
-     */
-    public function scopeSlackEnabled($query)
-    {
-        return $query->where('slack_enabled', true);
     }
 
     /**

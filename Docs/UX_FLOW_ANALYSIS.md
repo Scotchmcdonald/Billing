@@ -103,7 +103,7 @@ This document identified user journeys that were **functional but friction-heavy
 - **4-Step Wizard:**
   1. Company Information (name, industry, size, address)
   2. Billing Contact (name, email, phone, title)
-  3. Payment Method (Credit Card via Stripe or Invoice with Net 30)
+  3. Payment Method (Credit Card via Helcim or Invoice with Net 30)
   4. Subscription Tier (Basic $99, Professional $299, Enterprise $799)
 - **Progress Indicator:** Visual stepper showing completed/current/future steps
 - **Validation:** Each step validated before proceeding

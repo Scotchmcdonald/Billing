@@ -5,7 +5,6 @@ namespace Modules\Billing\Http\Controllers;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Modules\Billing\Services\BillingAuthorizationService;
-use Modules\Billing\Services\PaymentGatewayService;
 use Modules\Billing\Models\Company;
 use Modules\Billing\Models\Invoice;
 use Illuminate\Support\Facades\Auth;
@@ -18,12 +17,10 @@ use Modules\Billing\Events\QuoteRejected;
 class PortalController extends Controller
 {
     protected $authService;
-    protected $paymentService;
 
-    public function __construct(BillingAuthorizationService $authService, PaymentGatewayService $paymentService)
+    public function __construct(BillingAuthorizationService $authService)
     {
         $this->authService = $authService;
-        $this->paymentService = $paymentService;
     }
 
     public function entry()
@@ -52,15 +49,6 @@ class PortalController extends Controller
 
     public function dashboard(Company $company)
     {
-        // Ensure Stripe Customer exists
-        try {
-            if (! $company->stripe_id) {
-                $company->createAsStripeCustomer();
-            }
-        } catch (\Exception $e) {
-            report($e);
-        }
-
         $user = Auth::user();
         $companies = $this->authService->getAuthorizedCompanies($user);
         $hasMultipleCompanies = $companies->count() > 1;
@@ -248,13 +236,9 @@ class PortalController extends Controller
         }
 
         // Smart Payment Routing: Check balance
-        // Note: balance() returns a formatted string usually, but rawBalance() or similar might be needed.
-        // For this example, we assume we can get a raw float or we parse it.
-        // Cashier's balance() returns a string. We'd need to check Stripe directly or use a cached value.
-        // Let's assume we have a method or logic to get the raw amount.
         // For now, we'll pass a flag if we detect a high balance scenario (mocked).
         $highValueTransaction = false; 
-        // if ($company->rawBalance() > 100000) { $highValueTransaction = true; }
+        if ($company->account_balance > 100000) { $highValueTransaction = true; }
 
         $intent = $this->paymentService->createSetupIntent($company);
 

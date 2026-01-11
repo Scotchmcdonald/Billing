@@ -42,7 +42,31 @@ class Quote extends Model
         return QuoteFactory::new();
     }
 
-    protected $guarded = [];
+        protected $fillable = [
+        'company_id',
+        'client_id',
+        'quote_number',
+        'title',
+        'status',
+        'valid_until',
+        'subtotal',
+        'tax_total',
+        'total',
+        'notes',
+        'billing_frequency',
+        'pricing_tier',
+        'requires_approval',
+        'approval_threshold_percent',
+        'token',
+        'viewed_at',
+        'viewed_ip',
+        'accepted_at',
+        'signer_name',
+        'signer_email',
+        'signature_data',
+        'prospect_name',
+        'prospect_email',
+    ];
 
     protected $casts = [
         'valid_until' => 'date',

@@ -11,7 +11,14 @@ class Invitation extends Model
 
     protected $table = 'billing_invitations';
 
-    protected $guarded = [];
+        protected $fillable = [
+        'company_id',
+        'email',
+        'role',
+        'token',
+        'expires_at',
+        'company_name',
+    ];
 
     protected $casts = [
         'expires_at' => 'datetime',

@@ -17,7 +17,7 @@
 
 ### Payments
 - ✅ **As a Client Admin**, I want to **pay an invoice securely using a Credit Card or ACH** so that I can settle the debt instantly.
-  - *UI: Portal "Pay Now" Modal with Stripe integration*
+  - *UI: Portal "Pay Now" Modal with Helcim integration*
 - ✅ **As a Client Admin**, I want to **see the processing fee upfront** before I pay so that there are no surprises.
   - *UI: Portal Pay Modal shows calculated fee*
 - ✅ **As a Client Admin**, I want to **manage my saved payment methods** so that I can update an expired card.

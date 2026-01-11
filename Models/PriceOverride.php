@@ -17,7 +17,27 @@ class PriceOverride extends Model
         return \Modules\Billing\Database\Factories\PriceOverrideFactory::new();
     }
 
-    protected $guarded = [];
+        protected $fillable = [
+        'company_id',
+        'product_id',
+        'subscription_id',
+        'type',
+        'value',
+        'margin_percent',
+        'custom_price',
+        'start_date',
+        'end_date',
+        'starts_at',
+        'ends_at',
+                'is_active',
+        'notes',
+        'justification',
+        'status',
+        'requested_by',
+        'approved_by',
+        'requested_at',
+        'below_minimum_margin',
+    ];
 
     protected $casts = [
         'value' => 'decimal:4',

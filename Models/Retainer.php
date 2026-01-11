@@ -27,7 +27,15 @@ class Retainer extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+        protected $fillable = [
+        'company_id',
+        'hours_purchased',
+        'price_paid',
+        'hours_remaining',
+        'purchased_at',
+        'expires_at',
+        'status',
+    ];
 
     protected $casts = [
         'hours_purchased' => 'decimal:2',

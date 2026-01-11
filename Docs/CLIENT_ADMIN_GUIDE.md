@@ -23,7 +23,7 @@ Below the summary is a list of all invoices. Click **"View PDF"** to download a 
 ### Making a Payment
 1.  Click **"Pay Now"** next to an unpaid invoice.
 2.  **Select Payment Method:**
-    *   **Credit Card:** Enter your card details (processed securely via Stripe).
+    *   **Credit Card:** Enter your card details (processed securely via Helcim).
     *   **ACH / Bank Transfer:** Enter your bank routing and account number.
 3.  **Auto-Pay:** Check "Save this method for future automatic payments" to avoid manual payments next month.
 

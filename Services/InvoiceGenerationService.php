@@ -132,7 +132,7 @@ class InvoiceGenerationService
                 'status' => 'sent',
             ]);
 
-            // TODO: Send to Stripe if configured
+            // TODO: Post to Helcim if configured
             // TODO: Send email notification
 
             return $invoice;

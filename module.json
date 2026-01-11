@@ -1,7 +1,7 @@
 {
     "name": "Billing",
     "alias": "billing",
-    "description": "MSP Billing Portal with Stripe Cashier",
+    "description": "MSP Billing Portal with Helcim Integration",
     "keywords": [],
     "priority": 0,
     "providers": [

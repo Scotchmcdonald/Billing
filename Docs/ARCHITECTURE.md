@@ -42,7 +42,7 @@ The FinOps Billing Module follows a **mission-critical control tower** design ph
 - SortableJS (drag-and-drop)
 
 **External Services:**
-- Stripe (payment processing)
+- Helcim (payment processing)
 - Google Maps API (mileage tracking)
 - QuickBooks/Xero (accounting sync)
 
@@ -241,7 +241,7 @@ The FinOps Billing Module follows a **mission-critical control tower** design ph
     :color="'warning'"
 />
 
-<x-stripe-payment-element
+<x-helcim-payment-element
     :client-secret="$clientSecret"
     :company="$company"
 />
@@ -411,7 +411,7 @@ public function getRecognitionSchedule(Invoice $invoice): array
 5. InvoiceGenerationService->finalizeDraftInvoice()
    ├── Generate invoice_number
    ├── Status = 'sent'
-   ├── Send to Stripe (if company has stripe_id)
+   ├── Send to Helcim (if company has helcim_id)
    ├── Fire InvoiceFinalized event
    └── SendInvoiceEmail job queued
    ↓
@@ -476,7 +476,7 @@ public function getRecognitionSchedule(Invoice $invoice): array
    ↓
 2. Step 1: Payment Method
    ├── Select existing method OR
-   ├── Add new card/ACH via Stripe Elements
+   ├── Add new card/ACH via Helcim.js
    └── [Next]
    ↓
 3. Step 2: Schedule Configuration
@@ -495,7 +495,7 @@ public function getRecognitionSchedule(Invoice $invoice): array
 5. Backend:
    ├── Update Company->settings['auto_pay_enabled'] = true
    ├## Update Company->settings['auto_pay_config'] = [...]
-   ├── Set default Stripe payment method
+   ├── Set default payment method
    ├── Create audit log entry
    └── Queue confirmation email
 ```
@@ -504,29 +504,29 @@ public function getRecognitionSchedule(Invoice $invoice): array
 
 ## Integration Points
 
-### 1. Stripe Integration
+### 1. Helcim Integration
 
 **Payment Processing:**
 ```php
 // Setup Intent Creation (Portal)
 POST /portal/{company}/payment-methods/setup-intent
-→ Stripe::setupIntent()
-→ Return client_secret
+→ Helcim::createCardToken()
+→ Return card token
 
 // Payment Method Attachment
 POST /portal/{company}/payment-methods/attach
-→ Stripe::attachPaymentMethod($pmId, $stripeCustomerId)
+→ Helcim::attachCard($cardToken, $helcimId)
 → Update Company->pm_type, pm_last_four
 
 // Invoice Finalization
 InvoiceFinalized Event
-→ Stripe::invoice()->create([...])
-→ Update Invoice->stripe_invoice_id
+→ Helcim::processTransaction([...])
+→ Update Invoice status
 ```
 
 **Webhooks:**
 ```php
-POST /webhooks/stripe
+POST /webhooks/helcim
 → Signature verification (HMAC)
 → Events handled:
    - invoice.payment_succeeded → Update Invoice status
@@ -630,7 +630,7 @@ Permissions enforced via:
 // Sensitive fields encrypted at rest
 Company->billing_address (JSON, encrypted)
 Payment->payment_reference (e.g., check numbers)
-User->stripe_pm_id
+User->helcim_pm_id
 
 // Encryption handled by Laravel's encryption
 Crypt::encryptString($data)
@@ -664,13 +664,13 @@ $validated = $request->validate([
 
 **PCI Compliance:**
 - No card data stored on server
-- Stripe Elements for card input
+- Helcim.js for card input
 - Tokenization before server submission
-- Stripe PCI-DSS Level 1 compliance
+- Helcim PCI-DSS Level 1 compliance
 
 **Fraud Prevention:**
 - Rate limiting on payment endpoints
-- Stripe Radar for fraud detection
+- Helcim Fraud Defender
 - IP address logging
 - Failed payment attempt tracking
 

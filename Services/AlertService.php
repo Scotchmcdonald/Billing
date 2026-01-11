@@ -145,7 +145,7 @@ class AlertService
      */
     public function sendAlert(string $alertType, array $data): void
     {
-        // In real implementation, send via email, Slack, etc.
+        // In real implementation, send via email.
         Log::alert('Billing alert', [
             'type' => $alertType,
             'data' => $data,

@@ -29,7 +29,16 @@ use App\Models\User;
  */
 class Payment extends Model
 {
-    protected $guarded = [];
+        protected $fillable = [
+        'company_id',
+        'invoice_id',
+        'amount',
+        'payment_date',
+        'payment_method',
+        'payment_reference',
+        'notes',
+        'created_by',
+            ];
 
     protected $casts = [
         'amount' => 'decimal:4',

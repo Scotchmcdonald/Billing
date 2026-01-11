@@ -9,7 +9,16 @@ class UsageChange extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+        protected $fillable = [
+        'subscription_id',
+        'company_id',
+        'old_quantity',
+        'new_quantity',
+        'delta',
+        'source',
+        'status',
+        'metadata',
+    ];
 
     protected $casts = [
         'metadata' => 'array',

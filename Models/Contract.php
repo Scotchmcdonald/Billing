@@ -12,7 +12,23 @@ class Contract extends Model
 
     protected $table = 'billing_subscriptions';
 
-    protected $guarded = [];
+        protected $fillable = [
+        'company_id',
+        'product_id',
+        'name',
+                'is_active',
+        'starts_at',
+        'ends_at',
+        'contract_start_date',
+        'contract_end_date',
+        'billing_frequency',
+        'quantity',
+        'effective_price',
+        'contract_document_path',
+        'renewal_status',
+        'metadata',
+        'next_billing_date',
+            ];
 
     protected $casts = [
         'contract_start_date' => 'date',

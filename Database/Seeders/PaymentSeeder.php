@@ -117,7 +117,6 @@ class PaymentSeeder extends Seeder
             'check' => 'CHK',
             'cash' => 'CASH',
             'stripe' => 'ch',
-            'paypal' => 'PP',
         ];
 
         $prefix = $prefixes[$method] ?? 'TXN';
@@ -131,8 +130,6 @@ class PaymentSeeder extends Seeder
     {
         if ($gateway === 'stripe') {
             return 'ch_' . substr(md5(uniqid()), 0, 24);
-        } elseif ($gateway === 'paypal') {
-            return 'PAYID-' . strtoupper(substr(md5(uniqid()), 0, 16));
         }
         return null;
     }
@@ -152,8 +149,7 @@ class PaymentSeeder extends Seeder
             'wire_transfer' => 'Wire transfer received',
             'check' => 'Check received and deposited',
             'cash' => 'Cash payment received',
-            'stripe' => 'Online payment via Stripe',
-            'paypal' => 'PayPal payment received',
+            'stripe' => 'Online payment via Helcim',
         ];
 
         return $notes[$method] ?? 'Payment received';

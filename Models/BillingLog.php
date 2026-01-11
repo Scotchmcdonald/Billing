@@ -6,7 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class BillingLog extends Model
 {
-    protected $guarded = [];
+        protected $fillable = [
+        'company_id',
+        'user_id',
+        'action',
+        'description',
+        'payload',
+        'ip_address',
+    ];
 
     protected $casts = [
         'payload' => 'array',

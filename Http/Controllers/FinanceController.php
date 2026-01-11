@@ -334,29 +334,6 @@ class FinanceController extends Controller
         return view('billing::finance.settings', compact('settings'));
     }
 
-    public function updateStripeSettings(Request $request)
-    {
-        $request->validate([
-            'stripe_key' => 'required|string|starts_with:pk_',
-            'stripe_secret' => 'required|string|starts_with:sk_',
-            'stripe_webhook_secret' => 'nullable|string',
-        ]);
-
-        // Save to database
-        $this->updateSetting('stripe_key', $request->stripe_key, 'stripe', 'string', true);
-        $this->updateSetting('stripe_secret', $request->stripe_secret, 'stripe', 'string', true);
-        $this->updateSetting('stripe_webhook_secret', $request->stripe_webhook_secret, 'stripe', 'string', true);
-
-        // Update runtime config
-        config([
-            'cashier.key' => $request->stripe_key,
-            'cashier.secret' => $request->stripe_secret,
-            'cashier.webhook.secret' => $request->stripe_webhook_secret,
-        ]);
-
-        return redirect()->back()->with('success', 'Stripe settings updated successfully.');
-    }
-
     public function updateQuickBooksSettings(Request $request)
     {
         $request->validate([

@@ -459,7 +459,6 @@ class BillingDemoSeeder extends Seeder
                     'billing_address' => json_encode($data['address']),
                     'is_active' => true,
                     'pricing_tier' => $data['tier'],
-                    'stripe_id' => 'cus_' . Str::random(14),
                     'pm_type' => 'card',
                     'pm_last_four' => ['4242', '5555', '4111', '6011'][rand(0, 3)],
                 ]
@@ -721,9 +720,6 @@ class BillingDemoSeeder extends Seeder
                 'name' => 'default',
             ],
             [
-                'stripe_id' => 'sub_' . Str::random(14),
-                'stripe_status' => 'active',
-                'stripe_price' => 'price_' . Str::random(14),
                 'quantity' => 1,
                 'starts_at' => $startDate,
                 'ends_at' => null,
@@ -826,10 +822,10 @@ class BillingDemoSeeder extends Seeder
                 'invoice_id' => $invoice->id,
                 'company_id' => $company->id,
                 'amount' => $total,
-                'payment_method' => 'stripe_card',
+                'payment_method' => 'manual',
                 'payment_reference' => 'ch_' . Str::random(24),
                 'payment_date' => $date->copy()->addDays(rand(1, 10)),
-                'notes' => 'Automatic payment - ' . $company->pm_type . ' ending in ' . $company->pm_last_four,
+                'notes' => 'Manual payment',
                 'created_by' => $this->user->id,
             ]);
         }

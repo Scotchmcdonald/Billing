@@ -43,7 +43,19 @@ class BillableEntry extends Model
         return \Modules\Billing\Database\Factories\BillableEntryFactory::new();
     }
 
-    protected $guarded = [];
+        protected $fillable = [
+        'company_id',
+        'user_id',
+        'type',
+        'description',
+        'quantity',
+        'rate',
+        'subtotal',
+        'is_billable',
+        'date',
+        'metadata',
+        'ticket_id',
+    ];
 
     protected $casts = [
         'quantity' => 'decimal:2',

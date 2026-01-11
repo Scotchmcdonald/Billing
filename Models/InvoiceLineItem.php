@@ -31,25 +31,29 @@ class InvoiceLineItem extends Model
 {
     use HasFactory;
 
+        protected $fillable = [
+        'description',
+        'dispute_reason',
+        'invoice_id',
+        'is_disputed',
+        'is_fee',
+                'product_id',
+        'quantity',
+        'service_period_end',
+        'service_period_start',
+        'standard_unit_price',
+        'subtotal',
+        'tax_amount',
+        'tax_credit_amount',
+                        'unit_price',
+    ];
+
     protected static function newFactory()
     {
         return InvoiceLineItemFactory::new();
     }
 
-    protected $fillable = [
-        'invoice_id',
-        'product_id',
-        'description',
-        'quantity',
-        'unit_price',
-        'standard_unit_price',
-        'subtotal',
-        'tax_amount',
-        'tax_credit_amount',
-        'is_fee',
-        'is_disputed',
-        'dispute_reason',
-    ];
+    
 
     protected $casts = [
         'unit_price' => 'decimal:4',

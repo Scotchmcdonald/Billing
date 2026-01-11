@@ -167,7 +167,7 @@
                                 <div class="mt-2">
                                     <select id="tax_provider" name="tax_provider" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-primary-600 sm:max-w-xs sm:text-sm sm:leading-6">
                                         <option value="manual" {{ ($settings['tax']->firstWhere('key', 'tax_provider')->value ?? 'manual') == 'manual' ? 'selected' : '' }}>Manual / None</option>
-                                        <option value="stripe_tax" {{ ($settings['tax']->firstWhere('key', 'tax_provider')->value ?? '') == 'stripe_tax' ? 'selected' : '' }}>Stripe Tax</option>
+                                        <option value="avatax" {{ ($settings['tax']->firstWhere('key', 'tax_provider')->value ?? '') == 'avatax' ? 'selected' : '' }}>AvaTax</option>
                                         <option value="taxjar" {{ ($settings['tax']->firstWhere('key', 'tax_provider')->value ?? '') == 'taxjar' ? 'selected' : '' }}>TaxJar</option>
                                     </select>
                                 </div>

@@ -16,9 +16,6 @@ class SubscriptionFactory extends Factory
         return [
             'company_id' => Company::factory(),
             'name' => 'default',
-            'stripe_id' => 'sub_' . $this->faker->randomAscii,
-            'stripe_status' => 'active',
-            'stripe_price' => 'price_' . $this->faker->randomAscii,
             'quantity' => 1,
             'trial_ends_at' => null,
             'ends_at' => null,

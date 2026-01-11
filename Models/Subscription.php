@@ -10,9 +10,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property int $id
  * @property int $company_id
  * @property string $name
- * @property string $stripe_status
- * @property string|null $stripe_id
- * @property string|null $stripe_price
  * @property int $product_id
  * @property int $quantity
  * @property float $effective_price
@@ -44,7 +41,24 @@ class Subscription extends Model
 
     protected $table = 'billing_subscriptions';
 
-    protected $guarded = [];
+        protected $fillable = [
+        'company_id',
+        'product_id',
+        'name',
+                'quantity',
+        'billing_frequency',
+        'starts_at',
+        'ends_at',
+        'trial_ends_at',
+        'next_billing_date',
+        'contract_start_date',
+        'contract_end_date',
+        'contract_document_path',
+        'effective_price',
+        'renewal_status',
+        'is_active',
+        'metadata',
+            ];
 
     protected $casts = [
         'effective_price' => 'decimal:4',

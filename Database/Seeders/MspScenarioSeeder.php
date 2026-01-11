@@ -232,7 +232,6 @@ class MspScenarioSeeder extends Seeder
         DB::table('companies')->truncate();
         
         // Inventory Tables
-        DB::table('asset_software_product')->truncate();
         DB::table('assets')->truncate();
         DB::table('procurement_records')->truncate();
         DB::table('product_prototypes')->truncate();

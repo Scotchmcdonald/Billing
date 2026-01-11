@@ -237,7 +237,7 @@
                                                :class="formData.payment_method === 'card' ? 'text-primary-600' : 'text-gray-400'"></i>
                                             <div>
                                                 <div class="font-semibold">Credit Card</div>
-                                                <div class="text-xs text-gray-500">Auto-pay via Stripe</div>
+                                                <div class="text-xs text-gray-500">Auto-pay via Helcim</div>
                                             </div>
                                         </div>
                                     </label>
@@ -261,7 +261,7 @@
                                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start">
                                     <i class="fas fa-info-circle text-blue-600 mr-3 mt-0.5"></i>
                                     <div class="text-sm text-blue-800">
-                                        You'll be redirected to Stripe to securely enter your payment details after completing this wizard.
+                                        You'll be redirected to Helcim to securely enter your payment details after completing this wizard.
                                     </div>
                                 </div>
                             </div>
@@ -479,8 +479,8 @@
                             const data = await response.json();
                             
                             if (this.formData.payment_method === 'card') {
-                                // Redirect to Stripe checkout
-                                window.location.href = data.stripe_url;
+                                // Redirect to Helcim checkout
+                                window.location.href = data.helcim_url;
                             } else {
                                 // Redirect to dashboard
                                 window.location.href = data.redirect_url;

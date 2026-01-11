@@ -44,8 +44,8 @@
                                 <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">{{ $company->email }}</dd>
                             </div>
                             <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Stripe ID</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">{{ $company->stripe_id ?? 'Not Connected' }}</dd>
+                                <dt class="text-sm font-medium text-gray-500">Helcim ID</dt>
+                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 font-mono">{{ $company->helcim_id ?? 'Not Connected' }}</dd>
                             </div>
                         </dl>
                     </div>
