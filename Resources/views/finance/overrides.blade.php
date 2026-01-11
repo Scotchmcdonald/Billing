@@ -25,8 +25,6 @@
                 price = parseFloat(this.newOverride.value) || 0;
             } else if (this.newOverride.type === 'discount_percent') {
                 price = this.basePrice * (1 - (parseFloat(this.newOverride.value) || 0) / 100);
-            } else if (this.newOverride.type === 'markup_percent') {
-                price = this.basePrice * (1 + (parseFloat(this.newOverride.value) || 0) / 100);
             }
             
             if (price === 0) return 0;

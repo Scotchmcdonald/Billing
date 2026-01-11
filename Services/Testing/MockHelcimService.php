@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Billing\Services;
+namespace Modules\Billing\Services\Testing;
 
 use Modules\Billing\Contracts\HelcimServiceInterface;
 use Modules\Billing\DataTransferObjects\HelcimResponseDTO;

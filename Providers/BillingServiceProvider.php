@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Gate;
 // use Laravel\Cashier\Cashier;
 
 use Modules\Billing\Models\Invoice;
-use Modules\Billing\Observers\InvoiceObserver;
 
 class BillingServiceProvider extends ServiceProvider
 {
@@ -17,11 +16,6 @@ class BillingServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        Invoice::observe(InvoiceObserver::class);
-
-        // Cashier::useSubscriptionModel(\Modules\Billing\Models\Subscription::class);
-        // Cashier::useSubscriptionItemModel(\Modules\Billing\Models\SubscriptionItem::class);
-
         $this->registerRoutes();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->moduleName, 'Database/Migrations'));

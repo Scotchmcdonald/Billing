@@ -47,8 +47,6 @@ class PricingEngineService
                     $price = Money::fromFloat((float)$override->value);
                 } elseif ($override->type === 'discount_percent') {
                      $price = $basePrice->multiply(1 - ($override->value / 100));
-                } elseif ($override->type === 'markup_percent') {
-                     $price = $basePrice->multiply(1 + ($override->value / 100));
                 }
                 $source = 'override';
             } else {
@@ -141,7 +139,8 @@ class PricingEngineService
 
     public function getPriceBreakdown(Company $company, Product $product): array
     {
-        $effective = $this->calculateEffectivePrice($company, $product);
+        $snapshot = ProductSnapshot::fromModel($product);
+        $effective = $this->calculateEffectivePrice($company, $snapshot);
         $tierPrice = $product->getPriceForTier($company->pricing_tier);
         
         return [

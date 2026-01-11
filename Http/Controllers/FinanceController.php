@@ -90,77 +90,12 @@ class FinanceController extends Controller
         return view('billing::finance.dashboard', compact('totalMrr', 'arAging', 'grossProfit', 'pendingInvoicesCount', 'recentActivity', 'forecastData', 'churnRate', 'metrics'));
     }
 
-    public function preFlight()
-    {
-        // Placeholder data for Pre-Flight Review
-        $invoices = [
-            [
-                'id' => 1,
-                'company_name' => 'Acme Corp',
-                'total' => 1250.00,
-                'variance' => 5.2,
-                'anomaly_score' => 15,
-                'line_items_count' => 5,
-                'unbilled_items' => true,
-                'status' => 'pending_review',
-                'line_items' => [
-                    ['description' => 'Standard Plan Subscription', 'amount' => 1000.00],
-                    ['description' => 'Extra Storage (50GB)', 'amount' => 50.00],
-                    ['description' => 'Priority Support', 'amount' => 200.00],
-                ]
-            ],
-            [
-                'id' => 2,
-                'company_name' => 'Globex Inc',
-                'total' => 3400.00,
-                'variance' => 25.0,
-                'anomaly_score' => 85, // High anomaly
-                'line_items_count' => 12,
-                'unbilled_items' => false,
-                'status' => 'pending_review',
-                'line_items' => [
-                    ['description' => 'Enterprise Plan Subscription', 'amount' => 3000.00],
-                    ['description' => 'Consulting Hours (2)', 'amount' => 400.00],
-                ]
-            ],
-             [
-                'id' => 3,
-                'company_name' => 'Stark Industries',
-                'total' => 15000.00,
-                'variance' => -2.0,
-                'anomaly_score' => 5,
-                'line_items_count' => 20,
-                'unbilled_items' => true,
-                'status' => 'pending_review',
-                'line_items' => [
-                    ['description' => 'Dedicated Server Cluster', 'amount' => 12000.00],
-                    ['description' => 'Managed Services', 'amount' => 3000.00],
-                ]
-            ],
-        ]; 
-        return view('billing::finance.pre-flight', compact('invoices'));
-    }
 
 
-
-    public function overrides()
-    {
-        return view('billing::finance.overrides');
-    }
-
-    public function invoices()
-    {
-        return view('billing::finance.invoices');
-    }
 
     public function payments()
     {
         return view('billing::finance.payments');
-    }
-
-    public function arAging()
-    {
-        return view('billing::finance.ar-aging');
     }
 
     public function collections()

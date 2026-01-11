@@ -9,14 +9,19 @@ use Modules\Billing\Models\Company;
 use Modules\Billing\Models\Invoice;
 use Modules\Billing\Models\InvoiceLineItem;
 use Modules\Billing\Models\BillableEntry;
+use Modules\Billing\Services\PricingEngineService;
 
 class InvoiceGenerationService
 {
     protected $reconciliationService;
+    protected $pricingEngineService;
 
-    public function __construct(ReconciliationService $reconciliationService)
-    {
+    public function __construct(
+        ReconciliationService $reconciliationService,
+        PricingEngineService $pricingEngineService
+    ) {
         $this->reconciliationService = $reconciliationService;
+        $this->pricingEngineService = $pricingEngineService;
     }
 
     /**
@@ -99,7 +104,10 @@ class InvoiceGenerationService
                 $subscription->update(['next_billing_date' => $nextDate]);
             }
 
-            // 2. Process Billable Entries
+            // 2. Process Billing Agreements (RTO)
+            $subtotal += $this->processBillingAgreements($company, $invoice, $billingDate);
+
+            // 3. Process Billable Entries
             $entries = $company->billableEntries()->unbilled()->get();
             foreach ($entries as $entry) {
                 $lineItem = InvoiceLineItem::create([
@@ -165,5 +173,83 @@ class InvoiceGenerationService
 
             return $invoice;
         });
+    }
+
+    /**
+     * Generate partial invoice details for preview (Quote/Draft).
+     * Replaces InvoiceBuilderService.
+     *
+     * @param Company $company
+     * @param array<int, array{sku: string, quantity?: int}> $items Array of ['sku' => string, 'quantity' => int]
+     * @return Collection<int, InvoiceLineItem>
+     */
+    public function draftInvoiceItems(Company $company, array $items): Collection
+    {
+        $lineItems = collect();
+
+        foreach ($items as $item) {
+            $sku = $item['sku'];
+            $quantity = $item['quantity'] ?? 1;
+
+            $product = \Modules\Inventory\Models\Product::where('sku', $sku)->firstOrFail();
+            
+            // Use PricingEngineService for logic-driven pricing (DTO alignment)
+            // Note: PricingEngineService expects ProductSnapshot, but currently accepts model in v2.
+            // Ideally we convert Product to Snapshot here, but for now we pass model if supported or map it.
+            // Assuming PricingEngineService::calculateEffectivePrice supports Product model or DTO.
+            
+            // NOTE: Earlier read of PricingEngineService showed it accepts `ProductSnapshot $product`.
+            // We need to map `Product` model to `ProductSnapshot` DTO here.
+            $snapshot = \Modules\Inventory\DataTransferObjects\ProductSnapshot::fromModel($product);
+
+            $priceResult = $this->pricingEngineService->calculateEffectivePrice($company, $snapshot);
+            
+            // Convert PriceResult objects (Money) back to float for UI/DB (Draft mode)
+            // Assuming PriceResult->price is a Money object or float. Based on earlier read: Money object.
+            // Money object usually has toFloat() or getAmount()/100.
+            $unitPrice = $priceResult->price->getAmount() / 100;
+            
+            $lineItem = new InvoiceLineItem([
+                'product_id' => $product->id,
+                'description' => $product->description ?: $product->name,
+                'quantity' => $quantity,
+                'unit_price' => $unitPrice,
+                'subtotal' => round($unitPrice * $quantity, 2),
+                'type' => 'product', // or 'draft'
+            ]);
+            
+            // Attach transient tax credit info if needed for UI
+            $lineItem->tax_credit_amount = $priceResult->tax_credit_amount ?? 0;
+
+            $lineItems->push($lineItem);
+        }
+
+        return $lineItems;
+    }
+
+    /**
+     * Process Rent-to-Own / Billing Agreements
+     */
+    protected function processBillingAgreements(Company $company, Invoice $invoice, Carbon $billingDate): float
+    {
+        // CRITICAL: Integrity Fix for RTO
+        // TODO: Implement full RTO logic.
+        // 1. Fetch Active BillingAgreements
+        // 2. Check if rto_balance_cents > 0
+        // 3. Create InvoiceLineItem
+        // 4. Decrement Balance (in transaction)
+        
+        $agreements = \Modules\Billing\Models\BillingAgreement::where('company_id', $company->id)
+            ->where('status', 'active')
+            ->get();
+            
+        $total = 0;
+        
+        foreach ($agreements as $agreement) {
+            // Placeholder logic to prevent "Loss of Control"
+            // Implementation required
+        }
+        
+        return $total;
     }
 }

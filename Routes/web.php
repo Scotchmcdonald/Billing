@@ -44,10 +44,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [FinanceController::class, 'index'])->name('billing.finance.index');
         Route::get('/portal-access', [\Modules\Billing\Http\Controllers\Finance\PortalAccessController::class, 'index'])->name('billing.finance.portal-access');
         Route::get('/dashboard', [FinanceController::class, 'dashboard'])->name('billing.finance.dashboard');
-        Route::get('/pre-flight', [FinanceController::class, 'preFlight'])->name('billing.finance.pre-flight');
         
-        // Pre-Flight Enhanced
-        Route::get('/pre-flight-enhanced', [PreFlightController::class, 'index'])->name('billing.finance.pre-flight-enhanced');
+        // Pre-Flight (Enhanced)
+        Route::get('/pre-flight', [PreFlightController::class, 'index'])->name('billing.finance.pre-flight');
         Route::post('/pre-flight/{invoice}/approve', [PreFlightController::class, 'approve'])->name('billing.finance.pre-flight.approve');
         Route::post('/pre-flight/{invoice}/approve-and-send', [PreFlightController::class, 'approveAndSend'])->name('billing.finance.pre-flight.approve-and-send');
         Route::post('/pre-flight/{invoice}/send', [PreFlightController::class, 'send'])->name('billing.finance.pre-flight.send');
