@@ -6,7 +6,8 @@ This directory contains comprehensive user stories, implementation guides, and U
 
 ### Core Documents
 
-- **[USER_STORIES_STATUS_REPORT.md](USER_STORIES_STATUS_REPORT.md)** - Current implementation status and phase recommendations
+- **[00_Index.md](00_Index.md)** - Main index of all user stories and personas (replaces status report).
+- **[PLAN_HYBRID_MSP_LIFECYCLE.md](../PLAN_HYBRID_MSP_LIFECYCLE.md)** - Implementation plan for Hybrid MSP Lifecycle.
 - **[PHASES_11_16_OVERVIEW.md](../PHASES_11_16_OVERVIEW.md)** - Executive summary and quick reference for Phases 11-16
 - **[APPLICATION_UX_UI_STANDARDS.md](../APPLICATION_UX_UI_STANDARDS.md)** - Complete UX/UI style guide
 
